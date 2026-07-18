@@ -58,6 +58,19 @@ export function Hero({ event }: { event: EventConfig }) {
           </span>
           {event.location.venue}, {event.location.city} —{" "}
           {event.location.province}
+          {event.location.googleMapsUrl && (
+            <>
+              {" "}
+              <a
+                href={event.location.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="whitespace-nowrap text-base font-medium text-muted underline underline-offset-4 hover:text-primary"
+              >
+                Cómo llegar
+              </a>
+            </>
+          )}
         </p>
 
         {hero.showCountdown && (

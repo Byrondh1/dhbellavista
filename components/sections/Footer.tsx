@@ -17,7 +17,8 @@ export function Footer({ event }: { event: EventConfig }) {
   return (
     <footer className="relative overflow-hidden border-t border-border bg-surface">
       <TextureOverlay theme={event.theme} zone="footer" />
-      <Container className="relative py-12">
+      {/* pb extra en móvil para que el CTA sticky no tape el crédito */}
+      <Container className="relative pt-12 pb-24 sm:pb-12">
         <div className="flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
             <Image

@@ -43,6 +43,7 @@ const config: EventConfig = {
     province: "Carchi",
     country: "Ecuador",
     coordinates: { lat: 0.6266, lng: -77.9364 },
+    googleMapsUrl: "https://maps.google.com/?q=0.6266,-77.9364", // TODO: pin del punto de concentración
   },
 
   site: {
