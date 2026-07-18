@@ -118,6 +118,62 @@ const config: EventConfig = {
         { label: "Modalidades", value: "3" },
       ],
     },
+
+    categoriesSection: {
+      title: "Modalidades",
+      intro:
+        "La rodada es abierta: participa con tu 4x4, UTV o moto enduro. Todo vehículo debe llegar con tanque lleno y en buen estado mecánico.",
+    },
+
+    // TODO: horarios reales del evento
+    schedule: {
+      days: [
+        {
+          dateLabel: "Día de la rodada",
+          items: [
+            { time: "07:00", title: "Concentración", detail: "Parque central de El Ángel." },
+            { time: "07:30", title: "Registro y briefing de seguridad" },
+            { time: "08:30", title: "Salida de la caravana" },
+            { time: "12:00", title: "Llegada a las Lagunas de Razococha", detail: "Almuerzo y tiempo libre para fotos." },
+            { time: "14:30", title: "Retorno en caravana" },
+            { time: "17:00", title: "Llegada a El Ángel y cierre" },
+          ],
+        },
+      ],
+    },
+
+    // TODO: costos y datos de pago reales
+    pricing: {
+      items: [
+        {
+          label: "Por vehículo 4x4 / UTV",
+          price: "$20",
+          includes: ["Sticker oficial del evento", "Hidratación", "Guía y apoyo mecánico en ruta"],
+          note: "Incluye piloto y un acompañante.",
+        },
+        {
+          label: "Motos enduro",
+          price: "$15",
+          includes: ["Sticker oficial del evento", "Hidratación", "Guía y apoyo mecánico en ruta"],
+        },
+      ],
+      paymentInfo: [
+        "Transferencia bancaria (datos por WhatsApp)",
+        "Efectivo el día del registro",
+      ],
+      deadlineLabel: "Cupos limitados — inscríbete con anticipación.",
+    },
+
+    contact: {
+      organizers: [
+        {
+          name: "Byron Herrería",
+          role: "Organizador — 4L Off Road Club",
+          phone: "593999999999", // TODO: número real
+        },
+      ],
+      showCommunityCta: true,
+    },
   },
 };
 

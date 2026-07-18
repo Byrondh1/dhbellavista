@@ -1,0 +1,79 @@
+import type { EventConfig, PricingSection } from "@/lib/types";
+import { waLink } from "@/lib/whatsapp";
+import { ButtonLink } from "@/components/ui/Button";
+import { Section } from "@/components/ui/Section";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+
+export function Pricing({
+  section,
+  whatsapp,
+}: {
+  section: PricingSection;
+  whatsapp: EventConfig["whatsapp"];
+}) {
+  return (
+    <Section id="costos" surface>
+      <SectionHeading
+        kicker="Inscripción"
+        title="Costos"
+        intro={section.deadlineLabel}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {section.items.map((item) => (
+          <div
+            key={item.label}
+            className="flex flex-col rounded-brand border border-border bg-background p-6"
+          >
+            <h3 className="font-semibold uppercase tracking-wide text-muted">
+              {item.label}
+            </h3>
+            <p className="mt-2 text-4xl font-bold text-primary">{item.price}</p>
+            {item.includes && item.includes.length > 0 && (
+              <ul className="mt-4 space-y-2 text-sm text-muted">
+                {item.includes.map((benefit) => (
+                  <li key={benefit} className="flex gap-2">
+                    <span aria-hidden="true" className="text-primary">
+                      ✓
+                    </span>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {item.note && (
+              <p className="mt-4 border-t border-border pt-3 text-sm text-muted">
+                {item.note}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {section.paymentInfo && section.paymentInfo.length > 0 && (
+        <div className="mt-8 rounded-brand border border-border bg-background p-6">
+          <h3 className="font-semibold uppercase tracking-wide">
+            Formas de pago
+          </h3>
+          <ul className="mt-3 space-y-1 text-muted">
+            {section.paymentInfo.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-10">
+        <ButtonLink
+          href={waLink(whatsapp.phone, whatsapp.registrationMessage)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <WhatsAppIcon />
+          Inscríbete por WhatsApp
+        </ButtonLink>
+      </div>
+    </Section>
+  );
+}

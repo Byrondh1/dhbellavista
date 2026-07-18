@@ -111,6 +111,68 @@ const config: EventConfig = {
         { label: "Disciplina", value: "DH" },
       ],
     },
+
+    categoriesSection: {
+      intro:
+        "Compite en la categoría que va con tu nivel. Toda categoría exige casco integral y guantes; se recomienda protección completa.",
+    },
+
+    // TODO: horarios reales del evento
+    schedule: {
+      days: [
+        {
+          dateLabel: "Sábado (día 1)",
+          items: [
+            { time: "08:00", title: "Acreditación y entrega de placas" },
+            { time: "09:00", title: "Reconocimiento de pista", detail: "Caminata obligatoria por la pista." },
+            { time: "10:00", title: "Entrenamientos libres" },
+            { time: "15:00", title: "Bajada clasificatoria" },
+          ],
+        },
+        {
+          dateLabel: "Domingo (día 2)",
+          items: [
+            { time: "08:00", title: "Entrenamiento de calentamiento" },
+            { time: "10:00", title: "Carrera — bajada 1" },
+            { time: "13:00", title: "Carrera — bajada final" },
+            { time: "15:30", title: "Premiación", detail: "En la zona de meta." },
+          ],
+        },
+      ],
+    },
+
+    // TODO: costos y datos de pago reales
+    pricing: {
+      items: [
+        {
+          label: "Inscripción general",
+          price: "$25",
+          includes: ["Placa de competencia", "Hidratación", "Cronometraje", "Premiación por categoría"],
+        },
+        {
+          label: "Categoría Juvenil",
+          price: "$15",
+          includes: ["Placa de competencia", "Hidratación", "Cronometraje"],
+          note: "Menores de edad con autorización firmada del representante.",
+        },
+      ],
+      paymentInfo: [
+        "Transferencia bancaria (datos por WhatsApp)",
+        "Efectivo el día de la acreditación",
+      ],
+      deadlineLabel: "Inscripciones abiertas hasta completar cupos.",
+    },
+
+    contact: {
+      organizers: [
+        {
+          name: "Byron Herrería",
+          role: "Organizador — Remnant EB",
+          phone: "593999999999", // TODO: número real
+        },
+      ],
+      showCommunityCta: true,
+    },
   },
 };
 
