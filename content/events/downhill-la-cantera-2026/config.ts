@@ -2,6 +2,19 @@ import type { EventConfig } from "@/lib/types";
 import heroImage from "./images/hero.png";
 import aboutImage from "./images/about.png";
 import clubLogo from "./images/logo-club.png";
+import track1 from "./images/track-1.png";
+import track2 from "./images/track-2.png";
+import gallery1 from "./images/gallery-1.png";
+import gallery2 from "./images/gallery-2.png";
+import gallery3 from "./images/gallery-3.png";
+import gallery4 from "./images/gallery-4.png";
+import gallery5 from "./images/gallery-5.png";
+import gallery6 from "./images/gallery-6.png";
+import sponsor1 from "./images/sponsor-1.png";
+import sponsor2 from "./images/sponsor-2.png";
+import sponsor3 from "./images/sponsor-3.png";
+import sponsor4 from "./images/sponsor-4.png";
+import sponsor5 from "./images/sponsor-5.png";
 
 // TODO(Byron): reemplazar placeholders — fecha exacta, número de WhatsApp,
 // links de redes/comunidad, categorías definitivas y fotos reales en images/.
@@ -117,6 +130,24 @@ const config: EventConfig = {
         "Compite en la categoría que va con tu nivel. Toda categoría exige casco integral y guantes; se recomienda protección completa.",
     },
 
+    route: {
+      mode: "embed",
+      // TODO: reemplazar por el iframe de Google My Maps con la pista dibujada
+      embedUrl: "https://maps.google.com/maps?q=0.6266,-77.9364&z=15&output=embed",
+      stats: {
+        distanceKm: 1.8,
+        elevationGainM: 320, // TODO: desnivel real de la pista
+        maxAltitudeM: 3100,
+        difficulty: "Extrema",
+      },
+      description:
+        "La pista La Cantera es un trazado corto y explosivo: secciones de roca suelta, peraltes naturales, drops y un jardín de piedras que define la carrera. Se camina en el reconocimiento y se corre con todo el domingo.",
+      images: [
+        { src: track1, alt: "Sección de roca de la pista La Cantera" },
+        { src: track2, alt: "Salto en la parte baja de la pista" },
+      ],
+    },
+
     // TODO: horarios reales del evento
     schedule: {
       days: [
@@ -161,6 +192,70 @@ const config: EventConfig = {
         "Efectivo el día de la acreditación",
       ],
       deadlineLabel: "Inscripciones abiertas hasta completar cupos.",
+    },
+
+    // TODO: reglamento definitivo (y agregar pdfPath cuando exista el PDF
+    // en public/events/downhill-la-cantera-2026/reglamento.pdf)
+    rules: {
+      items: [
+        {
+          title: "Equipo de protección obligatorio",
+          body: "Casco integral, guantes cerrados y zapatillas firmes son obligatorios en entrenamientos y carrera. Se recomienda espaldar, rodilleras y coderas. Sin equipo completo no se permite largar.",
+        },
+        {
+          title: "Estado de la bicicleta",
+          body: "La bicicleta debe pasar revisión mecánica en la acreditación: frenos operativos en ambas ruedas, dirección firme y llantas en buen estado.",
+        },
+        {
+          title: "Menores de edad",
+          body: "Los menores de edad deben presentar autorización firmada por su representante legal al momento de la acreditación.",
+        },
+        {
+          title: "Reconocimiento de pista",
+          body: "La caminata de reconocimiento del sábado es obligatoria. Ningún corredor podrá entrenar sin haber completado el reconocimiento.",
+        },
+        {
+          title: "Responsabilidad",
+          body: "Cada corredor participa bajo su propia responsabilidad y firma un deslinde al inscribirse. La organización dispone de atención de primeros auxilios durante todo el evento.",
+        },
+      ],
+    },
+
+    // TODO: auspiciantes reales (logos en images/ y links)
+    sponsors: {
+      tiers: [
+        {
+          tier: "oro",
+          sponsors: [{ name: "Auspiciante Oro", logo: { src: sponsor1, alt: "Logo de auspiciante oro" } }],
+        },
+        {
+          tier: "plata",
+          sponsors: [
+            { name: "Auspiciante Plata 1", logo: { src: sponsor2, alt: "Logo de auspiciante plata" } },
+            { name: "Auspiciante Plata 2", logo: { src: sponsor3, alt: "Logo de auspiciante plata" } },
+          ],
+        },
+        {
+          tier: "bronce",
+          sponsors: [
+            { name: "Auspiciante Bronce 1", logo: { src: sponsor4, alt: "Logo de auspiciante bronce" } },
+            { name: "Auspiciante Bronce 2", logo: { src: sponsor5, alt: "Logo de auspiciante bronce" } },
+          ],
+        },
+      ],
+    },
+
+    // TODO: fotos reales de ediciones anteriores
+    gallery: {
+      images: [
+        { src: gallery1, alt: "Rider en la sección de roca" },
+        { src: gallery2, alt: "Salto en la zona baja de la pista" },
+        { src: gallery3, alt: "Público en la zona de meta" },
+        { src: gallery4, alt: "Premiación de la edición anterior" },
+        { src: gallery5, alt: "Corredor en el jardín de piedras" },
+        { src: gallery6, alt: "Panorámica de la pista La Cantera" },
+      ],
+      // instagramUrl: "https://instagram.com/...",
     },
 
     contact: {

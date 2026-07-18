@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="EB Corp" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>Rodada Angeleña 4x4 — El Ángel a Lagunas de Razococha (trazado referencial)</name></metadata>
+  <trk>
+    <name>El Ángel → Lagunas de Razococha</name>
+    <trkseg>
+      <trkpt lat="0.62660" lon="-77.93140"><ele>3000</ele></trkpt>
+      <trkpt lat="0.62904" lon="-77.93018"><ele>3024</ele></trkpt>
+      <trkpt lat="0.63144" lon="-77.92910"><ele>3049</ele></trkpt>
+      <trkpt lat="0.63375" lon="-77.92817"><ele>3073</ele></trkpt>
+      <trkpt lat="0.63593" lon="-77.92738"><ele>3097</ele></trkpt>
+      <trkpt lat="0.63796" lon="-77.92670"><ele>3121</ele></trkpt>
+      <trkpt lat="0.63980" lon="-77.92611"><ele>3144</ele></trkpt>
+      <trkpt lat="0.64145" lon="-77.92561"><ele>3167</ele></trkpt>
+      <trkpt lat="0.64290" lon="-77.92515"><ele>3190</ele></trkpt>
+      <trkpt lat="0.64414" lon="-77.92472"><ele>3212</ele></trkpt>
+      <trkpt lat="0.64521" lon="-77.92429"><ele>3233</ele></trkpt>
+      <trkpt lat="0.64612" lon="-77.92383"><ele>3254</ele></trkpt>
+      <trkpt lat="0.64691" lon="-77.92332"><ele>3274</ele></trkpt>
+      <trkpt lat="0.64761" lon="-77.92274"><ele>3293</ele></trkpt>
+      <trkpt lat="0.64827" lon="-77.92205"><ele>3312</ele></trkpt>
+      <trkpt lat="0.64892" lon="-77.92125"><ele>3331</ele></trkpt>
+      <trkpt lat="0.64963" lon="-77.92031"><ele>3348</ele></trkpt>
+      <trkpt lat="0.65042" lon="-77.91923"><ele>3366</ele></trkpt>
+      <trkpt lat="0.65135" lon="-77.91800"><ele>3382</ele></trkpt>
+      <trkpt lat="0.65243" lon="-77.91662"><ele>3398</ele></trkpt>
+      <trkpt lat="0.65369" lon="-77.91508"><ele>3414</ele></trkpt>
+      <trkpt lat="0.65515" lon="-77.91341"><ele>3429</ele></trkpt>
+      <trkpt lat="0.65681" lon="-77.91160"><ele>3444</ele></trkpt>
+      <trkpt lat="0.65867" lon="-77.90967"><ele>3459</ele></trkpt>
+      <trkpt lat="0.66071" lon="-77.90765"><ele>3474</ele></trkpt>
+      <trkpt lat="0.66290" lon="-77.90556"><ele>3488</ele></trkpt>
+      <trkpt lat="0.66522" lon="-77.90341"><ele>3503</ele></trkpt>
+      <trkpt lat="0.66762" lon="-77.90124"><ele>3517</ele></trkpt>
+      <trkpt lat="0.67007" lon="-77.89907"><ele>3532</ele></trkpt>
+      <trkpt lat="0.67251" lon="-77.89693"><ele>3547</ele></trkpt>
+      <trkpt lat="0.67490" lon="-77.89484"><ele>3562</ele></trkpt>
+      <trkpt lat="0.67720" lon="-77.89283"><ele>3578</ele></trkpt>
+      <trkpt lat="0.67937" lon="-77.89092"><ele>3594</ele></trkpt>
+      <trkpt lat="0.68139" lon="-77.88913"><ele>3610</ele></trkpt>
+      <trkpt lat="0.68322" lon="-77.88747"><ele>3627</ele></trkpt>
+      <trkpt lat="0.68485" lon="-77.88596"><ele>3645</ele></trkpt>
+      <trkpt lat="0.68628" lon="-77.88460"><ele>3663</ele></trkpt>
+      <trkpt lat="0.68751" lon="-77.88339"><ele>3682</ele></trkpt>
+      <trkpt lat="0.68857" lon="-77.88233"><ele>3701</ele></trkpt>
+      <trkpt lat="0.68947" lon="-77.88142"><ele>3721</ele></trkpt>
+      <trkpt lat="0.69025" lon="-77.88063"><ele>3742</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

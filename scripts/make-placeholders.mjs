@@ -103,3 +103,25 @@ save(`${rd}/hero.png`, 1600, 900, verticalGradient("#111111", "#6b5202"));
 save(`${rd}/about.png`, 1200, 800, verticalGradient("#6b5202", "#111111"));
 save(`${rd}/logo-club.png`, 600, 600, diagonalSplit("#f2b705", "#111111"));
 save(`${rd}/texture-tread.png`, 240, 240, treadPattern("#000000", 60, 26));
+
+// Fotos de pista/recorrido
+save(`${dh}/track-1.png`, 1200, 800, verticalGradient("#331107", "#0a0a0a"));
+save(`${dh}/track-2.png`, 1200, 800, verticalGradient("#0a0a0a", "#442211"));
+
+// Galería (6 por evento, tonos derivados de cada paleta)
+const dhGallery = ["#661100", "#442211", "#331107", "#552200", "#220a05", "#773311"];
+const rdGallery = ["#6b5202", "#4a3a06", "#33280a", "#5c4a10", "#252008", "#7a5c02"];
+dhGallery.forEach((color, i) =>
+  save(`${dh}/gallery-${i + 1}.png`, 800, 600, verticalGradient(color, "#0a0a0a")),
+);
+rdGallery.forEach((color, i) =>
+  save(`${rd}/gallery-${i + 1}.png`, 800, 600, verticalGradient(color, "#111111")),
+);
+
+// Logos de auspiciantes (grises neutros, formato horizontal)
+const sponsorGrays = ["#8a8a8a", "#6f6f6f", "#5a5a5a", "#474747", "#383838"];
+for (const dir of [dh, rd]) {
+  sponsorGrays.forEach((color, i) =>
+    save(`${dir}/sponsor-${i + 1}.png`, 400, 200, diagonalSplit(color, "#2a2a2a")),
+  );
+}
