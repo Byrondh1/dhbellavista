@@ -1,4 +1,5 @@
 import { getActiveEvent } from "@/lib/event";
+import { buildEventJsonLd } from "@/lib/jsonld";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Categories } from "@/components/sections/Categories";
@@ -28,7 +29,13 @@ export default function Home() {
 
   return (
     <>
-      <main className="flex-1">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildEventJsonLd(event)),
+        }}
+      />
+      <main id="contenido" className="flex-1">
         <Hero event={event} />
         {about && <About section={about} />}
         {categoriesSection && (

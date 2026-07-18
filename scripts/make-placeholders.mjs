@@ -125,3 +125,17 @@ for (const dir of [dh, rd]) {
     save(`${dir}/sponsor-${i + 1}.png`, 400, 200, diagonalSplit(color, "#2a2a2a")),
   );
 }
+
+// Open Graph (1200×630, <300 KB): reemplazar por el afiche real del evento
+save(
+  "public/events/downhill-la-cantera-2026/og.png",
+  1200,
+  630,
+  diagonalSplit("#cc2200", "#0a0a0a"),
+);
+save(
+  "public/events/rodada-angelena-4x4-2026/og.png",
+  1200,
+  630,
+  diagonalSplit("#f2b705", "#111111"),
+);

@@ -187,6 +187,8 @@ export interface EventConfig {
     country: string;
     /** Link "cómo llegar" */
     googleMapsUrl?: string;
+    /** Para el JSON-LD (rich results de Google) */
+    coordinates?: { lat: number; lng: number };
   };
   site: {
     /** Dominio de producción; NEXT_PUBLIC_SITE_URL tiene prioridad */

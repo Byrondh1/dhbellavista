@@ -42,6 +42,7 @@ const config: EventConfig = {
     city: "El Ángel",
     province: "Carchi",
     country: "Ecuador",
+    coordinates: { lat: 0.6266, lng: -77.9364 },
   },
 
   site: {
@@ -64,6 +65,8 @@ const config: EventConfig = {
       "Ecuador",
       "travesía",
     ],
+    // TODO: reemplazar por el afiche del evento (1200×630, <300 KB)
+    ogImagePath: "/events/rodada-angelena-4x4-2026/og.png",
   },
 
   whatsapp: {

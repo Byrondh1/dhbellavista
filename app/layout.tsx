@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Oswald, Archivo_Black } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { getActiveEvent } from "@/lib/event";
 import { buildMetadata } from "@/lib/seo";
@@ -53,8 +54,26 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${oswald.variable} ${archivoBlack.variable} h-full antialiased`}
       style={style}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        {/* Marca que hay JS: las animaciones de scroll solo ocultan contenido
+            cuando este atributo existe (sin JS la página queda visible) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.dataset.js = "1"`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col">
+        <a href="#contenido" className="skip-link">
+          Saltar al contenido
+        </a>
+        {children}
+      </body>
+      {event.site.gaId && process.env.NODE_ENV === "production" && (
+        <GoogleAnalytics gaId={event.site.gaId} />
+      )}
     </html>
   );
 }

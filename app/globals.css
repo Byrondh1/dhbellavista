@@ -49,3 +49,45 @@ html {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
+
+/* Link "saltar al contenido": invisible hasta recibir foco por teclado */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  background: var(--c-primary);
+  color: var(--c-primary-contrast);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-brand);
+  font-weight: 600;
+}
+
+/*
+ * Animación de entrada al hacer scroll (componente Reveal). Solo se oculta
+ * contenido cuando hay JS (html[data-js]); sin JS todo queda visible.
+ */
+html[data-js] .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+html[data-js] .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-js] .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
