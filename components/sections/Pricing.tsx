@@ -1,16 +1,14 @@
 import type { EventConfig, PricingSection } from "@/lib/types";
-import { waLink } from "@/lib/whatsapp";
-import { ButtonLink } from "@/components/ui/Button";
+import { RegistrationCtaButton } from "@/components/ui/RegistrationCtaButton";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 
 export function Pricing({
   section,
-  whatsapp,
+  event,
 }: {
   section: PricingSection;
-  whatsapp: EventConfig["whatsapp"];
+  event: EventConfig;
 }) {
   return (
     <Section id="costos" surface>
@@ -65,14 +63,7 @@ export function Pricing({
       )}
 
       <div className="mt-10">
-        <ButtonLink
-          href={waLink(whatsapp.phone, whatsapp.registrationMessage)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <WhatsAppIcon />
-          Inscríbete por WhatsApp
-        </ButtonLink>
+        <RegistrationCtaButton event={event} />
       </div>
     </Section>
   );

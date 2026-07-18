@@ -73,6 +73,13 @@ const config: EventConfig = {
     // communityInviteUrl: "https://chat.whatsapp.com/...",
   },
 
+  // Cambiar mode a "modal" cuando exista el módulo propio de inscripciones
+  registrationCta: {
+    mode: "whatsapp",
+    label: "¡Inscríbete ya!",
+    stickyLabel: "Inscríbete",
+  },
+
   theme: {
     colors: {
       primary: "#F2B705",
@@ -109,7 +116,6 @@ const config: EventConfig = {
         alt: "Caravana de vehículos 4x4 cruzando el páramo de El Ángel",
       },
       showCountdown: true,
-      ctaLabel: "¡Inscríbete ya!",
       secondaryCtaLabel: "Únete a la comunidad",
     },
 

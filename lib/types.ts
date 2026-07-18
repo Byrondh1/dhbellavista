@@ -45,11 +45,26 @@ export interface Category {
   requirements?: string;
 }
 
+/**
+ * Cómo se inscribe la gente. "whatsapp" abre wa.me con mensaje pre-llenado.
+ * "modal" queda reservado para el futuro módulo propio de inscripciones
+ * (formulario + Supabase + comprobante + correos): al implementarlo, todos
+ * los CTAs del sitio (hero, sticky, costos) cambiarán de comportamiento
+ * con solo editar este campo — los componentes ya lo consultan.
+ */
+export type RegistrationCtaMode = "whatsapp" | "modal";
+
+export interface RegistrationCta {
+  mode: RegistrationCtaMode;
+  /** CTA principal (hero), ej. "¡Inscríbete ya!" */
+  label: string;
+  /** Texto del botón sticky flotante (por defecto usa `label`) */
+  stickyLabel?: string;
+}
+
 export interface HeroSection {
   backgroundImage: ImageAsset;
   showCountdown?: boolean;
-  /** CTA principal: abre WhatsApp con el mensaje de inscripción */
-  ctaLabel: string;
   /** CTA secundario: link a la comunidad de WhatsApp (requiere communityInviteUrl) */
   secondaryCtaLabel?: string;
 }
@@ -196,6 +211,8 @@ export interface EventConfig {
     /** Link de invitación al grupo/comunidad del evento */
     communityInviteUrl?: string;
   };
+  /** CTA de inscripción usado por hero, botón sticky y sección de costos */
+  registrationCta: RegistrationCta;
   theme: EventTheme;
   /** Fuente única de categorías: sección Categorías + select del formulario */
   categories: Category[];

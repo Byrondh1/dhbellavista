@@ -74,6 +74,13 @@ const config: EventConfig = {
     // communityInviteUrl: "https://chat.whatsapp.com/...",
   },
 
+  // Cambiar mode a "modal" cuando exista el módulo propio de inscripciones
+  registrationCta: {
+    mode: "whatsapp",
+    label: "¡Inscríbete ya!",
+    stickyLabel: "Inscríbete",
+  },
+
   theme: {
     colors: {
       primary: "#CC2200",
@@ -104,7 +111,6 @@ const config: EventConfig = {
         alt: "Rider de MTB descendiendo la pista La Cantera",
       },
       showCountdown: true,
-      ctaLabel: "¡Inscríbete ya!",
       secondaryCtaLabel: "Únete a la comunidad",
     },
 

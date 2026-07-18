@@ -10,7 +10,7 @@ import { Sponsors } from "@/components/sections/Sponsors";
 import { Gallery } from "@/components/sections/Gallery";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
-import { FloatingWhatsApp } from "@/components/ui/FloatingWhatsApp";
+import { StickyRegistrationCta } from "@/components/ui/StickyRegistrationCta";
 
 export default function Home() {
   const event = getActiveEvent();
@@ -36,7 +36,7 @@ export default function Home() {
         )}
         {route && <Route section={route} />}
         {schedule && <Schedule section={schedule} />}
-        {pricing && <Pricing section={pricing} whatsapp={event.whatsapp} />}
+        {pricing && <Pricing section={pricing} event={event} />}
         {rules && <Rules section={rules} />}
         {sponsors && <Sponsors section={sponsors} />}
         {gallery && <Gallery section={gallery} />}
@@ -49,10 +49,7 @@ export default function Home() {
         )}
       </main>
       <Footer event={event} />
-      <FloatingWhatsApp
-        phone={event.whatsapp.phone}
-        message={event.whatsapp.registrationMessage}
-      />
+      <StickyRegistrationCta event={event} />
     </>
   );
 }

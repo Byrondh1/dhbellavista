@@ -1,10 +1,9 @@
 import Image from "next/image";
 import type { EventConfig } from "@/lib/types";
-import { waLink } from "@/lib/whatsapp";
 import { ButtonLink } from "@/components/ui/Button";
 import { Countdown } from "@/components/ui/Countdown";
+import { RegistrationCtaButton } from "@/components/ui/RegistrationCtaButton";
 import { TextureOverlay } from "@/components/ui/TextureOverlay";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 
 export function Hero({ event }: { event: EventConfig }) {
   const hero = event.sections.hero;
@@ -68,14 +67,7 @@ export function Hero({ event }: { event: EventConfig }) {
         )}
 
         <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-          <ButtonLink
-            href={waLink(whatsapp.phone, whatsapp.registrationMessage)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <WhatsAppIcon />
-            {hero.ctaLabel}
-          </ButtonLink>
+          <RegistrationCtaButton event={event} />
           {hero.secondaryCtaLabel && whatsapp.communityInviteUrl && (
             <ButtonLink
               variant="outline"
