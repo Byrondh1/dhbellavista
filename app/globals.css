@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/*
+ * Tokens semánticos del tema. Los valores (--c-*) los inyecta layout.tsx
+ * en <html> desde el config del evento — aquí solo se mapean a utilidades
+ * de Tailwind (bg-primary, text-muted, border-border, rounded-brand…).
+ * Los componentes NUNCA usan colores literales.
+ */
+@theme inline {
+  --color-primary: var(--c-primary);
+  --color-primary-contrast: var(--c-primary-contrast);
+  --color-background: var(--c-background);
+  --color-surface: var(--c-surface);
+  --color-foreground: var(--c-text);
+  --color-muted: var(--c-text-muted);
+  --color-border: var(--c-border);
+
+  --radius-brand: var(--radius-brand);
+
+  --font-sans: var(--font-geist-sans);
+  --font-heading: var(--font-heading-active);
+}
+
+body {
+  background: var(--c-background);
+  color: var(--c-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading-active), var(--font-sans), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Foco visible consistente con la marca del evento */
+:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+}
