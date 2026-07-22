@@ -78,11 +78,24 @@ const config: EventConfig = {
     // communityInviteUrl: "https://chat.whatsapp.com/...",
   },
 
-  // Cambiar mode a "modal" cuando exista el módulo propio de inscripciones
+  // Cambiar mode a "modal" cuando el proyecto Supabase esté configurado
+  // (SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Vercel + supabase/schema.sql)
   registrationCta: {
     mode: "whatsapp",
     label: "¡Inscríbete ya!",
     stickyLabel: "Inscríbete",
+  },
+
+  registrationForm: {
+    fields: {
+      cedula: true,
+      ciudad: true,
+      emergencyContact: true,
+      clubTeam: true,
+    },
+    comprobante: true,
+    privacyNote:
+      "Tus datos se usan únicamente para la organización del evento y no se comparten con terceros.",
   },
 
   theme: {

@@ -11,9 +11,9 @@ export function registrationHref(event: EventConfig): string {
     case "whatsapp":
       return waLink(event.whatsapp.phone, event.whatsapp.registrationMessage);
     case "modal":
-      // Futuro módulo de inscripciones: el sticky/hero abrirá el modal en
-      // lugar de navegar. Mientras no exista, ancla a la sección de costos.
-      return "#costos";
+      // El modal de inscripción escucha este hash (deep-linkeable: compartir
+      // el link con #inscribirse abre el formulario directamente)
+      return "#inscribirse";
   }
 }
 

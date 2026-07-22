@@ -11,7 +11,9 @@ import { Sponsors } from "@/components/sections/Sponsors";
 import { Gallery } from "@/components/sections/Gallery";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
+import { RegistrationModal } from "@/components/registration/RegistrationModal";
 import { StickyRegistrationCta } from "@/components/ui/StickyRegistrationCta";
+import { waLink } from "@/lib/whatsapp";
 
 export default function Home() {
   const event = getActiveEvent();
@@ -57,6 +59,17 @@ export default function Home() {
       </main>
       <Footer event={event} />
       <StickyRegistrationCta event={event} />
+      {event.registrationCta.mode === "modal" && event.registrationForm && (
+        <RegistrationModal
+          form={event.registrationForm}
+          categories={event.categories}
+          eventName={event.name}
+          whatsappHref={waLink(
+            event.whatsapp.phone,
+            event.whatsapp.registrationMessage,
+          )}
+        />
+      )}
     </>
   );
 }

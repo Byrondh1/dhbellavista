@@ -1,9 +1,30 @@
-# Módulo propio de inscripciones — diseño previsto (NO implementado)
+# Módulo propio de inscripciones
 
-Este documento fija las decisiones de arquitectura para que el módulo de
-inscripciones se pueda agregar **sin rehacer nada** de la plantilla actual.
+Estado de implementación:
 
-## Qué hará el módulo (alcance futuro)
+- **M1 — HECHO**: modal con formulario (hash `#inscribirse`, deep-linkeable),
+  endpoint `POST /api/inscripciones` con validación zod + honeypot, guardado
+  en Supabase, subida de comprobante al bucket privado, esquema SQL con RLS.
+- **M2 — pendiente**: Correo 1 con Resend + PDF provisional
+  (hook marcado con `TODO(M2)` en el endpoint).
+- **M3 — pendiente**: panel admin, verificar/rechazar, Correo 2 con dorsal
+  y QR.
+
+## Cómo activar las inscripciones en línea (por evento)
+
+1. Crear el proyecto en [supabase.com](https://supabase.com) y ejecutar
+   `supabase/schema.sql` en el SQL Editor (una sola vez, sirve para todos
+   los eventos).
+2. En el proyecto de Vercel del evento, definir `SUPABASE_URL` y
+   `SUPABASE_SERVICE_ROLE_KEY` (Settings → API del proyecto Supabase).
+3. En el config del evento, cambiar `registrationCta.mode` a `"modal"` y
+   ajustar `registrationForm` (campos, comprobante, `privacyNote`).
+4. Para cerrar inscripciones: `registrationForm.closed: true`.
+
+Si Supabase no está configurado y el modo es `"modal"`, el endpoint responde
+503 con un mensaje que redirige a WhatsApp — el sitio no se rompe.
+
+## Alcance completo del módulo
 
 1. Botón sticky "Inscribirse" abre un **modal** con formulario: nombre,
    cédula, categoría (desde `EventConfig.categories`), ciudad, teléfono,

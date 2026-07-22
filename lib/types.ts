@@ -117,12 +117,13 @@ export interface PricingSection {
   deadlineLabel?: string;
 }
 
-export interface RegistrationSection {
-  provider: "google-embed" | "formspree" | "whatsapp-only";
-  googleFormEmbedUrl?: string;
-  /** Ej. "https://formspree.io/f/xxxx" */
-  formspreeEndpoint?: string;
-  /** Campos activos del formulario propio (provider formspree) */
+/**
+ * Formulario del módulo propio de inscripciones (modal). Se usa cuando
+ * registrationCta.mode === "modal". Los datos van a Supabase vía
+ * /api/inscripciones (ver docs/modulo-inscripciones.md).
+ */
+export interface RegistrationFormConfig {
+  /** Campos activos además de los siempre presentes (nombre, categoría, teléfono) */
   fields: {
     cedula: boolean;
     ciudad: boolean;
@@ -130,6 +131,8 @@ export interface RegistrationSection {
     /** Campo "club o equipo" (siempre opcional para el usuario) */
     clubTeam: boolean;
   };
+  /** Pedir comprobante de transferencia (imagen o PDF) */
+  comprobante: boolean;
   /** Muestra "inscripciones cerradas" en lugar del formulario */
   closed?: boolean;
   /** Aviso de uso de datos personales (importante: se recoge cédula) */
@@ -215,6 +218,8 @@ export interface EventConfig {
   };
   /** CTA de inscripción usado por hero, botón sticky y sección de costos */
   registrationCta: RegistrationCta;
+  /** Requerido cuando registrationCta.mode === "modal" */
+  registrationForm?: RegistrationFormConfig;
   theme: EventTheme;
   /** Fuente única de categorías: sección Categorías + select del formulario */
   categories: Category[];
@@ -226,7 +231,6 @@ export interface EventConfig {
     route?: RouteSection;
     schedule?: ScheduleSection;
     pricing?: PricingSection;
-    registration?: RegistrationSection;
     rules?: RulesSection;
     sponsors?: SponsorsSection;
     gallery?: GallerySection;
