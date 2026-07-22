@@ -137,6 +137,12 @@ export interface RegistrationFormConfig {
   closed?: boolean;
   /** Aviso de uso de datos personales (importante: se recoge cédula) */
   privacyNote?: string;
+  /**
+   * Texto del consentimiento LOPDP que acepta el checkbox obligatorio.
+   * Si se omite se usa DEFAULT_CONSENT_TEXT (lib/registration-schema.ts).
+   * Se persiste con cada inscripción como evidencia de la versión aceptada.
+   */
+  consentText?: string;
 }
 
 export interface RulesSection {

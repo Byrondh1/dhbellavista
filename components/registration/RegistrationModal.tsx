@@ -5,6 +5,7 @@ import type { Category, RegistrationFormConfig } from "@/lib/types";
 import {
   COMPROBANTE_MAX_BYTES,
   COMPROBANTE_TYPES,
+  DEFAULT_CONSENT_TEXT,
 } from "@/lib/registration-schema";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 
@@ -352,6 +353,17 @@ export function RegistrationModal({
                 </p>
               </div>
             )}
+
+            {/* Consentimiento LOPDP: obligatorio y nunca pre-marcado */}
+            <label className="flex items-start gap-3 text-xs leading-relaxed text-muted">
+              <input
+                type="checkbox"
+                name="consentimiento"
+                required
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--c-primary)]"
+              />
+              <span>{form.consentText ?? DEFAULT_CONSENT_TEXT}</span>
+            </label>
 
             {form.privacyNote && (
               <p className="text-xs leading-relaxed text-muted">

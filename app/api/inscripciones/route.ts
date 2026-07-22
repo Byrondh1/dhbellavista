@@ -1,12 +1,28 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
+import { matchesSignature } from "@/lib/file-signature";
 import {
   buildRegistrationSchema,
   COMPROBANTE_MAX_BYTES,
   COMPROBANTE_TYPES,
+  DEFAULT_CONSENT_TEXT,
 } from "@/lib/registration-schema";
+
+/** Máximo de inscripciones por IP por hora (anti-abuso) */
+const RATE_LIMIT_PER_HOUR = 5;
+
+/** sha256(ip + salt): permite limitar por IP sin guardar la IP en claro */
+function hashClientIp(request: Request): string | null {
+  const forwarded = request.headers.get("x-forwarded-for");
+  const ip = forwarded?.split(",")[0]?.trim() || request.headers.get("x-real-ip");
+  if (!ip) return null;
+  return createHash("sha256")
+    .update(`${ip}${process.env.IP_HASH_SALT ?? ""}`)
+    .digest("hex");
+}
 
 /**
  * Recibe una inscripción del modal: valida, guarda en Supabase y sube el
@@ -54,6 +70,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true }, { status: 201 });
   }
 
+  // Rate limit por IP (hash con salt, nunca la IP en claro). Ante un error
+  // de la consulta se deja pasar: el insert posterior fallaría igual si la
+  // base está caída, y un rate limit roto no debe bloquear inscripciones.
+  const ipHash = hashClientIp(request);
+  if (ipHash) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count, error: countError } = await supabase
+      .from("inscripciones")
+      .select("id", { count: "exact", head: true })
+      .eq("ip_hash", ipHash)
+      .gte("created_at", oneHourAgo);
+    if (!countError && (count ?? 0) >= RATE_LIMIT_PER_HOUR) {
+      return NextResponse.json(
+        {
+          error:
+            "Demasiadas inscripciones desde esta conexión. Intenta de nuevo en una hora o escríbenos por WhatsApp.",
+        },
+        { status: 429 },
+      );
+    }
+  }
+
   const parsed = buildRegistrationSchema(event).safeParse({
     nombre: data.get("nombre") ?? undefined,
     email: data.get("email") ?? undefined,
@@ -68,6 +106,7 @@ export async function POST(request: Request) {
       ? (data.get("emergenciaTelefono") ?? undefined)
       : undefined,
     club: data.get("club") ?? undefined,
+    consentimiento: data.get("consentimiento") ?? undefined,
   });
   if (!parsed.success) {
     const message =
@@ -87,6 +126,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  let fileBytes: Uint8Array | null = null;
   if (file) {
     if (!COMPROBANTE_TYPES.includes(file.type)) {
       return NextResponse.json(
@@ -97,6 +137,14 @@ export async function POST(request: Request) {
     if (file.size > COMPROBANTE_MAX_BYTES) {
       return NextResponse.json(
         { error: "El comprobante no puede superar los 5 MB." },
+        { status: 400 },
+      );
+    }
+    // Magic bytes: el contenido real debe corresponder al tipo declarado
+    fileBytes = new Uint8Array(await file.arrayBuffer());
+    if (!matchesSignature(fileBytes, file.type)) {
+      return NextResponse.json(
+        { error: "El archivo no parece ser una imagen o PDF válido." },
         { status: 400 },
       );
     }
@@ -126,6 +174,9 @@ export async function POST(request: Request) {
         emergencia_nombre: input.emergenciaNombre ?? null,
         emergencia_telefono: input.emergenciaTelefono ?? null,
         club: input.club || null,
+        consentimiento_at: new Date().toISOString(),
+        consentimiento_texto: form!.consentText ?? DEFAULT_CONSENT_TEXT,
+        ip_hash: ipHash,
       })
       .select("id")
       .single();
@@ -144,12 +195,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if (file) {
+    if (file && fileBytes) {
       const extension = file.name.split(".").pop()?.toLowerCase() ?? "bin";
       const path = `${event.slug}/${row.id}.${extension}`;
       const { error: uploadError } = await sb.storage
         .from("comprobantes")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, fileBytes, { contentType: file.type });
       if (uploadError) {
         console.error("Error subiendo comprobante:", uploadError);
         // La inscripción ya existe; se registra sin comprobante y el admin

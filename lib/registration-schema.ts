@@ -10,6 +10,14 @@ export const COMPROBANTE_TYPES = [
 ];
 export const COMPROBANTE_MAX_BYTES = 5 * 1024 * 1024;
 
+/**
+ * Texto de consentimiento (Ley Orgánica de Protección de Datos Personales,
+ * Ecuador). Se guarda junto a cada inscripción como evidencia de la versión
+ * aceptada. Un evento puede sobreescribirlo vía registrationForm.consentText.
+ */
+export const DEFAULT_CONSENT_TEXT =
+  "Autorizo al club organizador el tratamiento de mis datos personales con la única finalidad de gestionar mi inscripción y la logística del evento. Mis datos no serán cedidos a terceros y puedo ejercer mis derechos de acceso, rectificación y eliminación contactando al organizador.";
+
 const trimmed = (min: number, max: number, msg: string) =>
   z.string().trim().min(min, msg).max(max, msg);
 
@@ -47,6 +55,11 @@ export function buildRegistrationSchema(event: EventConfig) {
       : z.undefined(),
     // Club/equipo: siempre opcional para el usuario aunque el campo esté activo
     club: z.string().trim().max(120).optional().or(z.literal("")),
+    // Checkbox LOPDP: el navegador envía "on" cuando está marcado
+    consentimiento: z.literal(
+      "on",
+      "Debes aceptar el tratamiento de tus datos personales para inscribirte",
+    ),
   });
 }
 

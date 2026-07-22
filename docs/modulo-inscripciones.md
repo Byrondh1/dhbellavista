@@ -1,20 +1,28 @@
 # Módulo propio de inscripciones
 
-Estado de implementación:
+Estado de implementación (plan completo aprobado — ver fases A-D):
 
 - **M1 — HECHO**: modal con formulario (hash `#inscribirse`, deep-linkeable),
   endpoint `POST /api/inscripciones` con validación zod + honeypot, guardado
   en Supabase, subida de comprobante al bucket privado, esquema SQL con RLS.
-- **M2 — pendiente**: Correo 1 con Resend + PDF provisional
-  (hook marcado con `TODO(M2)` en el endpoint).
-- **M3 — pendiente**: panel admin, verificar/rechazar, Correo 2 con dorsal
-  y QR.
+- **Fase A — HECHO** (endurecimiento): consentimiento LOPDP obligatorio
+  (checkbox + texto versionado persistido), rate limiting por IP (hash con
+  salt, máx. 5/hora), verificación de magic bytes del comprobante, migración
+  0002 con `is_event_admin()` (preparada para multi-tenancy) y
+  `verificar_inscripcion()` (dorsal secuencial por categoría, atómico).
+- **Fase B — pendiente (requiere Byron)**: proyecto Supabase real + claves
+  en Vercel + `mode: "modal"`.
+- **Fase C — pendiente**: panel admin (@supabase/ssr, login, lista,
+  comprobante por URL firmada, verificar/rechazar).
+- **Fase D — pendiente (requiere dominio en Resend)**: Correo 1 + PDF
+  provisional (hook `TODO(M2)` en el endpoint), Correo 2 + PDF con dorsal y
+  QR firmado.
 
 ## Cómo activar las inscripciones en línea (por evento)
 
 1. Crear el proyecto en [supabase.com](https://supabase.com) y ejecutar
-   `supabase/schema.sql` en el SQL Editor (una sola vez, sirve para todos
-   los eventos).
+   `supabase/migrations/*.sql` en orden en el SQL Editor (una sola vez,
+   sirve para todos los eventos).
 2. En el proyecto de Vercel del evento, definir `SUPABASE_URL` y
    `SUPABASE_SERVICE_ROLE_KEY` (Settings → API del proyecto Supabase).
 3. En el config del evento, cambiar `registrationCta.mode` a `"modal"` y
