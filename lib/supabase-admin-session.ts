@@ -1,0 +1,44 @@
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+
+/**
+ * Cliente de Supabase del lado servidor ligado a la sesión del admin
+ * (cookies). Las lecturas hechas con este cliente pasan por RLS de verdad
+ * (políticas is_event_admin) — a diferencia del service role, que las salta.
+ */
+export async function getSupabaseSession(): Promise<SupabaseClient | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) return null;
+
+  const cookieStore = await cookies();
+  return createServerClient(url, anonKey, {
+    cookies: {
+      getAll: () => cookieStore.getAll(),
+      setAll: (cookiesToSet) => {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // Llamado desde un Server Component: el refresh de cookies lo
+          // maneja el middleware; ignorar es seguro.
+        }
+      },
+    },
+  });
+}
+
+/** Sesión del admin actual, o nulls si no hay login / no hay Supabase */
+export async function requireAdminUser(): Promise<{
+  supabase: SupabaseClient | null;
+  user: User | null;
+}> {
+  const supabase = await getSupabaseSession();
+  if (!supabase) return { supabase: null, user: null };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return { supabase, user };
+}
