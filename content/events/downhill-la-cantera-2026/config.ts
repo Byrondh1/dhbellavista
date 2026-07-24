@@ -78,10 +78,10 @@ const config: EventConfig = {
     // communityInviteUrl: "https://chat.whatsapp.com/...",
   },
 
-  // Cambiar mode a "modal" cuando el proyecto Supabase esté configurado
-  // (SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Vercel + supabase/schema.sql)
+  // Modo "modal" activo: requiere el proyecto Supabase configurado
+  // (migraciones de supabase/migrations/ + variables de .env.example)
   registrationCta: {
-    mode: "whatsapp",
+    mode: "modal",
     label: "¡Inscríbete ya!",
     stickyLabel: "Inscríbete",
   },
