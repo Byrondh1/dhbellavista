@@ -14,7 +14,7 @@ const OPEN_HASH = "#inscribirse";
 type Status =
   | { kind: "idle" }
   | { kind: "sending" }
-  | { kind: "success" }
+  | { kind: "success"; emailSent: boolean }
   | { kind: "error"; message: string };
 
 const inputClasses =
@@ -103,7 +103,8 @@ export function RegistrationModal({
         body: data,
       });
       if (res.ok) {
-        setStatus({ kind: "success" });
+        const body = await res.json().catch(() => null);
+        setStatus({ kind: "success", emailSent: body?.emailSent ?? false });
         formEl.reset();
       } else {
         const body = await res.json().catch(() => null);
@@ -165,8 +166,9 @@ export function RegistrationModal({
               ¡Inscripción recibida!
             </h3>
             <p className="mt-3 text-muted">
-              Tu pago quedó pendiente de verificación. Cuando lo confirmemos te
-              llegará un correo con tu inscripción definitiva.
+              {status.emailSent
+                ? "Te enviamos un correo con tu inscripción provisional (revisa también el spam). Cuando verifiquemos tu pago te llegará la inscripción definitiva con tu dorsal."
+                : "Tu pago quedó pendiente de verificación. Cuando lo confirmemos te llegará un correo con tu inscripción definitiva."}
             </p>
             <button
               type="button"
