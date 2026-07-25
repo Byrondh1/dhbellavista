@@ -98,3 +98,29 @@ export function correoRecibidaHtml(event: EventConfig, nombre: string): string {
     <p>Adjuntamos tu comprobante de inscripción provisional en PDF.</p>`,
   );
 }
+
+/** Correo 2: inscripción confirmada, con dorsal y PDF definitivo con QR */
+export function correoConfirmadaHtml(
+  event: EventConfig,
+  nombre: string,
+  dorsal: number | null | undefined,
+): string {
+  const { primary } = event.theme.colors;
+  return emailShell(
+    event,
+    `
+    <p>Hola <strong>${nombre}</strong>,</p>
+    <p>¡Tu pago fue verificado y tu inscripción al
+    <strong>${event.name}</strong> está <strong>confirmada</strong>! 🏁</p>
+    ${
+      dorsal != null
+        ? `<p style="margin:20px 0">Tu dorsal es:</p>
+           <p style="margin:0 0 20px;font-size:48px;font-weight:bold;color:${primary};background:${primary}10;border:2px solid ${primary};display:inline-block;padding:8px 28px;border-radius:4px">${dorsal}</p>`
+        : ""
+    }
+    <p>Adjuntamos tu <strong>inscripción definitiva en PDF</strong> con tu
+    código QR: preséntalo (impreso o en tu celular) en la acreditación del
+    día del evento.</p>
+    <p>¡Nos vemos en la pista!</p>`,
+  );
+}

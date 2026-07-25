@@ -10,18 +10,23 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
   salt, máx. 5/hora), verificación de magic bytes del comprobante, migración
   0002 con `is_event_admin()` (preparada para multi-tenancy) y
   `verificar_inscripcion()` (dorsal secuencial por categoría, atómico).
-- **Fase B — pendiente (requiere Byron)**: proyecto Supabase real + claves
-  en Vercel + `mode: "modal"`.
-- **Fase C — pendiente**: panel admin (@supabase/ssr, login, lista,
+- **Fase B — HECHO**: proyecto Supabase real, migraciones ejecutadas,
+  usuario admin creado y Downhill en `mode: "modal"`.
+- **Fase C — HECHO**: panel admin (@supabase/ssr, login, lista con filtros,
   comprobante por URL firmada, verificar/rechazar).
-- **Fase D — pendiente (requiere dominio en Resend)**: Correo 1 + PDF
-  provisional (hook `TODO(M2)` en el endpoint), Correo 2 + PDF con dorsal y
-  QR firmado.
+- **Fase D1 — HECHO**: Correo 1 ("inscripción recibida, pago pendiente")
+  con PDF provisional adjunto, enviado desde `/api/inscripciones`.
+- **Fase D2 — HECHO**: Correo 2 ("inscripción confirmada") con PDF
+  definitivo (dorsal + QR firmado), página `/admin/checkin` con "marcar
+  presente", y botón de reenviar correo en el panel.
+- **Fase D3 — pendiente**: correo al rechazar, en tono "acción requerida"
+  (invita a corregir el comprobante y reintentar) con el motivo escrito
+  por el admin y CTA de WhatsApp.
 
 ## Cómo activar las inscripciones en línea (por evento)
 
 1. Crear el proyecto en [supabase.com](https://supabase.com) y ejecutar
-   las **tres** migraciones de `supabase/migrations/` en orden en el SQL
+   **todas** las migraciones de `supabase/migrations/` en orden en el SQL
    Editor (una sola vez, sirve para todos los eventos). La 0003 es de
    seguridad: deja el bucket de comprobantes privado con límites de tamaño
    y MIME, y elimina cualquier policy pública que se haya creado a mano.
@@ -38,6 +43,32 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
 
 Si Supabase no está configurado y el modo es `"modal"`, el endpoint responde
 503 con un mensaje que redirige a WhatsApp — el sitio no se rompe.
+
+## Correos (Resend)
+
+Variables de servidor: `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS` (la dirección;
+el nombre visible del remitente sale del config del evento), `QR_SECRET`
+(firma del QR de check-in; generar con `openssl rand -hex 32`) y, opcional,
+`EMAIL_TEST_REDIRECT` para desviar todos los correos a una dirección de
+prueba.
+
+Ningún correo decide el destino de una inscripción: si Resend falla, la
+inscripción se guarda / verifica igual, el panel muestra el correo como "no
+enviado" y ofrece **Reenviar correo**. Sin `QR_SECRET`, el PDF definitivo se
+emite sin QR (queda registrado en los logs) en lugar de fallar.
+
+Tope del plan gratuito de Resend: 100 correos/día. Si se agota en un pico de
+inscripciones, los correos no enviados se recuperan con el botón de reenviar.
+
+## Check-in del día del evento
+
+El QR del PDF definitivo apunta a `<sitio>/admin/checkin?t=<token>`, donde el
+token lleva id + evento + dorsal firmados con HMAC-SHA256. Al escanearlo con
+la cámara del celular (con sesión de admin iniciada) se abre la ficha del
+participante con su dorsal y el botón **Marcar presente**, que registra
+`asistio_at` de forma idempotente. Un QR alterado o de otro evento muestra
+"QR no válido"; si la inscripción dejó de estar verificada, lo advierte y
+enlaza al panel.
 
 ## Alcance completo del módulo
 

@@ -3,8 +3,7 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
-import { correoRecibidaHtml, sendEventEmail } from "@/lib/email";
-import { renderInscripcionPdf } from "@/lib/pdf/inscripcion-pdf";
+import { enviarCorreoRecibida } from "@/lib/inscripcion-emails";
 import { matchesSignature } from "@/lib/file-signature";
 import {
   buildRegistrationSchema,
@@ -218,40 +217,22 @@ export async function POST(request: Request) {
     // Correo 1: "inscripción recibida, pago pendiente" + PDF provisional.
     // Nunca decide el destino de la inscripción: si falla se loguea, el
     // panel lo muestra como no enviado y permite reenviar.
-    let emailSent = false;
-    try {
-      const pdf = await renderInscripcionPdf(
-        event,
-        {
-          id: row.id,
-          nombre: input.nombre,
-          cedula: input.cedula ?? null,
-          categoria: input.categoria,
-          ciudad: input.ciudad ?? null,
-          telefono: input.telefono,
-          club: input.club || null,
-          created_at: new Date().toISOString(),
-        },
-        "provisional",
-      );
-      const { sent } = await sendEventEmail({
-        event,
-        to: input.email,
-        subject: `Inscripción recibida — ${event.name}`,
-        html: correoRecibidaHtml(event, input.nombre),
-        attachments: [
-          { filename: "inscripcion-provisional.pdf", content: pdf },
-        ],
-      });
-      emailSent = sent;
-      if (sent) {
-        await sb
-          .from("inscripciones")
-          .update({ correo_recibida_at: new Date().toISOString() })
-          .eq("id", row.id);
-      }
-    } catch (error) {
-      console.error(`Correo 1 falló para la inscripción ${row.id}:`, error);
+    const { sent: emailSent } = await enviarCorreoRecibida(event, {
+      id: row.id,
+      nombre: input.nombre,
+      email: input.email,
+      cedula: input.cedula ?? null,
+      categoria: input.categoria,
+      ciudad: input.ciudad ?? null,
+      telefono: input.telefono,
+      club: input.club || null,
+      created_at: new Date().toISOString(),
+    });
+    if (emailSent) {
+      await sb
+        .from("inscripciones")
+        .update({ correo_recibida_at: new Date().toISOString() })
+        .eq("id", row.id);
     }
 
     return NextResponse.json({ ok: true, emailSent }, { status: 201 });

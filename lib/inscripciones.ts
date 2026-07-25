@@ -18,6 +18,9 @@ export interface InscripcionRow {
   verificada_at: string | null;
   rechazada_at: string | null;
   rechazo_motivo: string | null;
+  correo_recibida_at: string | null;
+  correo_confirmada_at: string | null;
+  asistio_at: string | null;
 }
 
 export const ESTADO_LABELS: Record<InscripcionRow["estado"], string> = {

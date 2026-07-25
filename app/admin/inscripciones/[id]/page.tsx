@@ -7,6 +7,7 @@ import type { InscripcionRow } from "@/lib/inscripciones";
 import { Container } from "@/components/ui/Container";
 import { EstadoBadge } from "@/components/admin/EstadoBadge";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
+import { ReenviarCorreoButton } from "@/components/admin/ReenviarCorreoButton";
 
 export const metadata: Metadata = {
   title: "Detalle de inscripción",
@@ -133,6 +134,51 @@ export default async function InscripcionDetailPage({
               alt={`Comprobante de ${row.nombre}`}
               className="max-h-[28rem] rounded-brand border border-border"
             />
+          )}
+        </section>
+
+        <section className="mb-10">
+          <h2 className="mb-3 text-lg font-bold uppercase">Correos y asistencia</h2>
+          <ul className="space-y-1 text-sm text-muted">
+            <li>
+              Correo de recepción:{" "}
+              {row.correo_recibida_at ? (
+                <span className="font-medium text-foreground">
+                  enviado el {new Date(row.correo_recibida_at).toLocaleString("es-EC")}
+                </span>
+              ) : (
+                <span className="font-medium text-primary">no enviado</span>
+              )}
+            </li>
+            <li>
+              Correo de confirmación:{" "}
+              {row.correo_confirmada_at ? (
+                <span className="font-medium text-foreground">
+                  enviado el {new Date(row.correo_confirmada_at).toLocaleString("es-EC")}
+                </span>
+              ) : (
+                <span className="font-medium text-primary">no enviado</span>
+              )}
+            </li>
+            <li>
+              Check-in:{" "}
+              {row.asistio_at ? (
+                <span className="font-medium text-foreground">
+                  presente desde las{" "}
+                  {new Date(row.asistio_at).toLocaleTimeString("es-EC", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ) : (
+                "sin registrar"
+              )}
+            </li>
+          </ul>
+          {row.estado !== "rechazada" && (
+            <div className="mt-4">
+              <ReenviarCorreoButton id={row.id} />
+            </div>
           )}
         </section>
 

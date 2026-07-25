@@ -23,7 +23,7 @@ export async function getSupabaseSession(): Promise<SupabaseClient | null> {
           );
         } catch {
           // Llamado desde un Server Component: el refresh de cookies lo
-          // maneja el middleware; ignorar es seguro.
+          // maneja el proxy; ignorar es seguro.
         }
       },
     },

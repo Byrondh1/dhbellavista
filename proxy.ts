@@ -6,8 +6,10 @@ import { createServerClient } from "@supabase/ssr";
  * redirige al login. También refresca los tokens de la sesión en las
  * cookies (patrón estándar de @supabase/ssr). El resto del sitio no pasa
  * por aquí (ver matcher).
+ *
+ * Convención `proxy` de Next 16 (el nombre `middleware` está deprecado).
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
