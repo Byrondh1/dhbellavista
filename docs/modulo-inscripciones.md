@@ -21,8 +21,15 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
 ## Cómo activar las inscripciones en línea (por evento)
 
 1. Crear el proyecto en [supabase.com](https://supabase.com) y ejecutar
-   `supabase/migrations/*.sql` en orden en el SQL Editor (una sola vez,
-   sirve para todos los eventos).
+   las **tres** migraciones de `supabase/migrations/` en orden en el SQL
+   Editor (una sola vez, sirve para todos los eventos). La 0003 es de
+   seguridad: deja el bucket de comprobantes privado con límites de tamaño
+   y MIME, y elimina cualquier policy pública que se haya creado a mano.
+   Verifica después con:
+   `select policyname, roles, cmd from pg_policies
+    where schemaname = 'storage' and tablename = 'objects';`
+   — debe quedar solo "admin del evento ve comprobantes" ({authenticated},
+   SELECT) para este bucket.
 2. En el proyecto de Vercel del evento, definir `SUPABASE_URL` y
    `SUPABASE_SERVICE_ROLE_KEY` (Settings → API del proyecto Supabase).
 3. En el config del evento, cambiar `registrationCta.mode` a `"modal"` y
