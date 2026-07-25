@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { enviarCorreoRecibida } from "@/lib/inscripcion-emails";
+import { logError, logWarn } from "@/lib/logger";
 import { matchesSignature } from "@/lib/file-signature";
 import {
   buildRegistrationSchema,
@@ -217,7 +218,7 @@ export async function POST(request: Request) {
     // Correo 1: "inscripción recibida, pago pendiente" + PDF provisional.
     // Nunca decide el destino de la inscripción: si falla se loguea, el
     // panel lo muestra como no enviado y permite reenviar.
-    const { sent: emailSent } = await enviarCorreoRecibida(event, {
+    const { sent: emailSent, reason } = await enviarCorreoRecibida(event, {
       id: row.id,
       nombre: input.nombre,
       email: input.email,
@@ -229,10 +230,17 @@ export async function POST(request: Request) {
       created_at: new Date().toISOString(),
     });
     if (emailSent) {
-      await sb
+      // El write del timestamp se comprueba: un fallo aquí dejaría el correo
+      // como "no enviado" en el panel sin que nadie se enterase.
+      const { error: marcaError } = await sb
         .from("inscripciones")
         .update({ correo_recibida_at: new Date().toISOString() })
         .eq("id", row.id);
+      if (marcaError) {
+        logError(`No se pudo marcar correo_recibida_at en ${row.id}`, marcaError);
+      }
+    } else {
+      logWarn(`Inscripción ${row.id} guardada, pero sin Correo 1: ${reason}`);
     }
 
     return NextResponse.json({ ok: true, emailSent }, { status: 201 });

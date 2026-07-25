@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
@@ -9,17 +10,40 @@ import {
   enviarCorreoRecibida,
   rowParaCorreo,
 } from "@/lib/inscripcion-emails";
+import { describeError, logError, logInfo, logWarn } from "@/lib/logger";
 
 const actionSchema = z.object({
   action: z.enum(["verificar", "rechazar", "reenviar-correo", "checkin"]),
   motivo: z.string().trim().max(300).optional(),
 });
 
+/** Marca el timestamp del correo enviado, reportando el error si el write falla */
+async function marcarCorreoEnviado(
+  supabase: SupabaseClient,
+  id: string,
+  columna: "correo_recibida_at" | "correo_confirmada_at",
+): Promise<string | undefined> {
+  const { error } = await supabase
+    .from("inscripciones")
+    .update({ [columna]: new Date().toISOString() })
+    .eq("id", id);
+  if (error) {
+    // El correo YA salió: este fallo solo afecta el registro del envío, por
+    // eso se reporta sin revertir nada (antes se ignoraba en silencio).
+    logError(`No se pudo marcar ${columna} en ${id}`, error);
+    return `timestamp-error: ${describeError(error)}`;
+  }
+  logInfo(`${columna} marcado en ${id}`);
+  return undefined;
+}
+
 /**
  * Acciones del panel sobre una inscripción. La sesión del admin se valida
- * aquí (además del proxy); las mutaciones se ejecutan con service
- * role. Los correos jamás deciden el resultado de la acción: se reportan
- * con emailSent y pueden reenviarse.
+ * aquí (además del proxy); las mutaciones se ejecutan con service role.
+ *
+ * Los correos jamás deciden el resultado de la acción, pero cada intento y
+ * cada fallo queda registrado y se devuelve en `emailError` para que el
+ * panel muestre la razón real en lugar de fallar en silencio.
  */
 export async function POST(
   request: Request,
@@ -46,46 +70,97 @@ export async function POST(
     return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
   }
   const { action, motivo } = parsed.data;
+  logInfo(`Acción admin "${action}" sobre ${id} (${event.slug})`);
 
   // La inscripción debe pertenecer al evento de este sitio
-  const { data } = await supabase
+  const { data, error: readError } = await supabase
     .from("inscripciones")
     .select("*")
     .eq("id", id)
     .eq("event_slug", event.slug)
     .maybeSingle();
+  if (readError) {
+    logError(`No se pudo leer la inscripción ${id}`, readError);
+    return NextResponse.json(
+      { error: "No se pudo leer la inscripción." },
+      { status: 500 },
+    );
+  }
   if (!data) {
     return NextResponse.json({ error: "Inscripción no encontrada." }, { status: 404 });
   }
   const row = data as InscripcionRow;
-  const now = () => new Date().toISOString();
 
   try {
     switch (action) {
       case "verificar": {
-        const { data: updatedData, error } = await supabase.rpc(
+        const { data: rpcData, error } = await supabase.rpc(
           "verificar_inscripcion",
           { p_id: id },
         );
         if (error) throw error;
-        const updated = updatedData as InscripcionRow;
+        logInfo(
+          `RPC verificar_inscripcion devolvió ${Array.isArray(rpcData) ? "array" : typeof rpcData}`,
+          rpcData && typeof rpcData === "object"
+            ? Object.keys(rpcData as object)
+            : rpcData,
+        );
+
+        // No se confía en la forma que devuelve la RPC (composite type): la
+        // fuente autoritativa para el correo es una re-lectura de la fila.
+        const { data: freshData, error: freshError } = await supabase
+          .from("inscripciones")
+          .select("*")
+          .eq("id", id)
+          .single();
+        if (freshError || !freshData) {
+          logError(
+            `Verificada, pero no se pudo re-leer la fila ${id} para el correo`,
+            freshError,
+          );
+          return NextResponse.json({
+            ok: true,
+            emailSent: false,
+            emailError: `relectura-error: ${describeError(freshError)}`,
+          });
+        }
+        const updated = freshData as InscripcionRow;
+        logInfo(
+          `Inscripción ${id} verificada · estado=${updated.estado} dorsal=${updated.dorsal} correo_confirmada_at=${updated.correo_confirmada_at ?? "null"}`,
+        );
 
         // Correo 2 solo si nunca salió (idempotente ante doble clic);
         // para repetirlo existe la acción reenviar-correo
-        let emailSent = false;
-        if (!updated.correo_confirmada_at) {
-          ({ sent: emailSent } = await enviarCorreoConfirmada(
-            event,
-            rowParaCorreo(updated),
-          ));
-          if (emailSent) {
-            await supabase
-              .from("inscripciones")
-              .update({ correo_confirmada_at: now() })
-              .eq("id", id);
-          }
+        if (updated.correo_confirmada_at) {
+          logWarn(
+            `Correo 2 omitido en ${id}: ya se había enviado el ${updated.correo_confirmada_at}. Usa "Reenviar correo" para repetirlo.`,
+          );
+          return NextResponse.json({
+            ok: true,
+            inscripcion: updated,
+            emailSent: false,
+            emailError: "ya-enviado",
+          });
         }
-        return NextResponse.json({ ok: true, inscripcion: updated, emailSent });
+
+        const { sent, reason } = await enviarCorreoConfirmada(
+          event,
+          rowParaCorreo(updated),
+        );
+        let emailError = reason;
+        if (sent) {
+          emailError = await marcarCorreoEnviado(
+            supabase,
+            id,
+            "correo_confirmada_at",
+          );
+        }
+        return NextResponse.json({
+          ok: true,
+          inscripcion: updated,
+          emailSent: sent,
+          ...(emailError && { emailError }),
+        });
       }
 
       case "rechazar": {
@@ -93,7 +168,7 @@ export async function POST(
           .from("inscripciones")
           .update({
             estado: "rechazada",
-            rechazada_at: now(),
+            rechazada_at: new Date().toISOString(),
             rechazo_motivo: motivo ?? null,
             dorsal: null,
             verificada_at: null,
@@ -103,6 +178,7 @@ export async function POST(
           .select()
           .single();
         if (error) throw error;
+        logInfo(`Inscripción ${id} rechazada${motivo ? ` · motivo: ${motivo}` : ""}`);
         // TODO(D3): correo de rechazo en tono "acción requerida" con el
         // motivo y CTA de WhatsApp del organizador.
         return NextResponse.json({ ok: true, inscripcion: updated });
@@ -116,25 +192,28 @@ export async function POST(
           );
         }
         const esConfirmada = row.estado === "verificada";
-        const { sent } = esConfirmada
+        logInfo(
+          `Reenviando ${esConfirmada ? "Correo 2" : "Correo 1"} de ${id} a ${row.email}`,
+        );
+        const { sent, reason } = esConfirmada
           ? await enviarCorreoConfirmada(event, rowParaCorreo(row))
           : await enviarCorreoRecibida(event, rowParaCorreo(row));
-        if (sent) {
-          await supabase
-            .from("inscripciones")
-            .update(
-              esConfirmada
-                ? { correo_confirmada_at: now() }
-                : { correo_recibida_at: now() },
-            )
-            .eq("id", id);
+        if (!sent) {
+          return NextResponse.json(
+            { error: `No se pudo enviar el correo (${reason ?? "razón desconocida"}).` },
+            { status: 502 },
+          );
         }
-        return NextResponse.json(
-          sent
-            ? { ok: true, emailSent: true }
-            : { error: "No se pudo enviar el correo. Revisa los logs." },
-          { status: sent ? 200 : 502 },
+        const emailError = await marcarCorreoEnviado(
+          supabase,
+          id,
+          esConfirmada ? "correo_confirmada_at" : "correo_recibida_at",
         );
+        return NextResponse.json({
+          ok: true,
+          emailSent: true,
+          ...(emailError && { emailError }),
+        });
       }
 
       case "checkin": {
@@ -153,11 +232,12 @@ export async function POST(
         }
         const { data: updated, error } = await supabase
           .from("inscripciones")
-          .update({ asistio_at: now() })
+          .update({ asistio_at: new Date().toISOString() })
           .eq("id", id)
           .select()
           .single();
         if (error) throw error;
+        logInfo(`Check-in registrado para ${id} (dorsal ${row.dorsal})`);
         return NextResponse.json({
           ok: true,
           yaPresente: false,
@@ -166,7 +246,7 @@ export async function POST(
       }
     }
   } catch (error) {
-    console.error(`Error en acción admin "${action}":`, error);
+    logError(`Acción admin "${action}" sobre ${id} falló`, error);
     return NextResponse.json(
       { error: "No se pudo completar la acción. Intenta de nuevo." },
       { status: 500 },

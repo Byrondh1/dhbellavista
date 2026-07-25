@@ -29,10 +29,17 @@ export function InscripcionActions({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, motivo: motivo || undefined }),
       });
+      const body = await res.json().catch(() => null);
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
         setError(body?.error ?? "No se pudo completar la acción.");
         return;
+      }
+      // La acción sí funcionó, pero el correo pudo fallar: se muestra la
+      // razón en lugar de dejarlo pasar en silencio.
+      if (action === "verificar" && body?.emailSent === false) {
+        setError(
+          `Inscripción verificada, pero el correo NO salió (${body?.emailError ?? "razón desconocida"}). Revisa los logs y usa "Reenviar correo".`,
+        );
       }
       router.refresh();
     } catch {

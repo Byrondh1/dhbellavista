@@ -11,7 +11,9 @@
     "build:rodada": "NEXT_PUBLIC_EVENT=rodada-angelena-4x4-2026 next build",
     "placeholders": "node scripts/make-placeholders.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "diagnose:downhill": "NEXT_PUBLIC_EVENT=downhill-la-cantera-2026 tsx --env-file=.env.local --tsconfig scripts/tsconfig.preview.json scripts/diagnose-email.ts",
+    "diagnose:rodada": "NEXT_PUBLIC_EVENT=rodada-angelena-4x4-2026 tsx --env-file=.env.local --tsconfig scripts/tsconfig.preview.json scripts/diagnose-email.ts"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.10",

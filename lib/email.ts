@@ -1,11 +1,19 @@
 import { Resend } from "resend";
 import type { EventConfig } from "./types";
+import { describeError, logError, logInfo } from "./logger";
+
+/** Resultado de un envío: `reason` explica el fallo en lenguaje accionable */
+export interface EmailResult {
+  sent: boolean;
+  reason?: string;
+}
 
 /**
  * Envío de correos del módulo de inscripciones (Resend).
  *
- * Contrato: NUNCA lanza. Devuelve { sent } y loguea el detalle — un fallo
- * de correo jamás debe decidir el destino de una inscripción.
+ * Contrato: NUNCA lanza. Devuelve { sent, reason } y loguea cada etapa —
+ * un fallo de correo jamás debe decidir el destino de una inscripción, pero
+ * tampoco debe ser invisible.
  *
  * Por evento: el nombre visible del remitente es el nombre del evento
  * (la dirección es común, EMAIL_FROM_ADDRESS del dominio de EB Corp) y el
@@ -27,24 +35,32 @@ export async function sendEventEmail({
   subject: string;
   html: string;
   attachments?: { filename: string; content: Buffer }[];
-}): Promise<{ sent: boolean }> {
+}): Promise<EmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const fromAddress = process.env.EMAIL_FROM_ADDRESS;
-  if (!apiKey || !fromAddress) {
-    console.warn(
-      "Correo no enviado: faltan RESEND_API_KEY o EMAIL_FROM_ADDRESS.",
-    );
-    return { sent: false };
+
+  const faltantes = [
+    !apiKey && "RESEND_API_KEY",
+    !fromAddress && "EMAIL_FROM_ADDRESS",
+  ].filter(Boolean);
+  if (faltantes.length > 0) {
+    const reason = `env-missing: ${faltantes.join(", ")}`;
+    logError(`Correo NO enviado a ${to}: falta configuración (${reason})`);
+    return { sent: false, reason };
   }
 
   const redirect = process.env.EMAIL_TEST_REDIRECT;
+  const destino = redirect ?? to;
   const replyTo = event.sections.contact?.email;
 
   try {
+    logInfo(
+      `Enviando correo → ${destino}${redirect ? ` (redirigido de ${to})` : ""} · "${subject}"`,
+    );
     const resend = new Resend(apiKey);
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: `${event.name} <${fromAddress}>`,
-      to: redirect ?? to,
+      to: destino,
       subject: redirect ? `[TEST → ${to}] ${subject}` : subject,
       html,
       ...(replyTo && { replyTo }),
@@ -56,13 +72,16 @@ export async function sendEventEmail({
       }),
     });
     if (error) {
-      console.error(`Resend rechazó el correo a ${to}:`, error);
-      return { sent: false };
+      const reason = `resend-error: ${describeError(error)}`;
+      logError(`Resend rechazó el correo a ${destino}`, error);
+      return { sent: false, reason };
     }
+    logInfo(`Correo aceptado por Resend (id ${data?.id ?? "sin id"})`);
     return { sent: true };
   } catch (error) {
-    console.error(`Error enviando correo a ${to}:`, error);
-    return { sent: false };
+    const reason = `resend-exception: ${describeError(error)}`;
+    logError(`Excepción enviando correo a ${destino}`, error);
+    return { sent: false, reason };
   }
 }
 
@@ -115,7 +134,7 @@ export function correoConfirmadaHtml(
     ${
       dorsal != null
         ? `<p style="margin:20px 0">Tu dorsal es:</p>
-           <p style="margin:0 0 20px;font-size:48px;font-weight:bold;color:${primary};background:${primary}10;border:2px solid ${primary};display:inline-block;padding:8px 28px;border-radius:4px">${dorsal}</p>`
+           <p style="margin:0 0 20px;font-size:48px;font-weight:bold;color:${primary};border:2px solid ${primary};display:inline-block;padding:8px 28px;border-radius:4px">${dorsal}</p>`
         : ""
     }
     <p>Adjuntamos tu <strong>inscripción definitiva en PDF</strong> con tu
