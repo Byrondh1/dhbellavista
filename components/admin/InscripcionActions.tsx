@@ -36,9 +36,11 @@ export function InscripcionActions({
       }
       // La acción sí funcionó, pero el correo pudo fallar: se muestra la
       // razón en lugar de dejarlo pasar en silencio.
-      if (action === "verificar" && body?.emailSent === false) {
+      if (body?.emailSent === false) {
+        const queHizo =
+          action === "verificar" ? "Inscripción verificada" : "Inscripción rechazada";
         setError(
-          `Inscripción verificada, pero el correo NO salió (${body?.emailError ?? "razón desconocida"}). Revisa los logs y usa "Reenviar correo".`,
+          `${queHizo}, pero el correo NO salió (${body?.emailError ?? "razón desconocida"}). Revisa los logs y usa "Reenviar correo".`,
         );
       }
       router.refresh();
@@ -88,25 +90,35 @@ export function InscripcionActions({
       {showRejectForm && (
         <div className="space-y-3 rounded-brand border border-border bg-background p-4">
           <label className="block text-sm font-semibold" htmlFor="motivo-rechazo">
-            Motivo del rechazo (opcional)
+            Qué necesita corregir *
           </label>
+          <p className="text-xs text-muted">
+            Este texto se le <strong>envía al participante por correo</strong>,
+            invitándolo a corregir y reintentar. Sé específico.
+          </p>
           <textarea
             id="motivo-rechazo"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
-            rows={2}
+            rows={3}
             maxLength={300}
-            placeholder="Ej.: el comprobante no corresponde a la transferencia"
+            required
+            placeholder="Ej.: el comprobante está borroso y no se lee el número de transacción. Reenvíanos una captura nítida."
             className="w-full rounded-brand border border-border bg-surface px-3 py-2 text-sm"
           />
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || motivo.trim().length < 10}
             onClick={() => act("rechazar")}
-            className="rounded-brand border border-primary px-4 py-2 text-sm font-semibold uppercase text-primary disabled:opacity-60"
+            className="rounded-brand border border-primary px-4 py-2 text-sm font-semibold uppercase text-primary disabled:opacity-40"
           >
-            Confirmar rechazo
+            Rechazar y avisar por correo
           </button>
+          {motivo.trim().length < 10 && (
+            <p className="text-xs text-muted">
+              Escribe al menos 10 caracteres para poder enviar el aviso.
+            </p>
+          )}
         </div>
       )}
 

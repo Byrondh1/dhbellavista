@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import type { EventConfig } from "./types";
+import { waLink } from "./whatsapp";
 import { describeError, logError, logInfo } from "./logger";
 
 /** Resultado de un envío: `reason` explica el fallo en lenguaje accionable */
@@ -141,5 +142,52 @@ export function correoConfirmadaHtml(
     código QR: preséntalo (impreso o en tu celular) en la acreditación del
     día del evento.</p>
     <p>¡Nos vemos en la pista!</p>`,
+  );
+}
+
+/**
+ * Correo de rechazo, en tono de ACCIÓN REQUERIDA — no de puerta cerrada.
+ * La mayoría de rechazos son corregibles (comprobante borroso, monto que no
+ * cuadra, captura equivocada), así que el correo explica qué pasó, muestra
+ * el motivo que escribió la organización e invita a corregir por WhatsApp.
+ */
+export function correoRechazoHtml(
+  event: EventConfig,
+  nombre: string,
+  motivo: string | null | undefined,
+): string {
+  const { primary, primaryContrast } = event.theme.colors;
+  const whatsappHref = waLink(
+    event.whatsapp.phone,
+    `Hola, quiero corregir mi inscripción al ${event.name}. Mi nombre es: ${nombre}`,
+  );
+
+  return emailShell(
+    event,
+    `
+    <p>Hola <strong>${nombre}</strong>,</p>
+    <p>Revisamos tu inscripción al <strong>${event.name}</strong> y
+    <strong>todavía no pudimos verificar tu pago</strong>. Tu cupo no está
+    perdido: en la mayoría de los casos se resuelve reenviando el
+    comprobante correcto.</p>
+    ${
+      motivo
+        ? `<div style="margin:20px 0;padding:16px;border-left:4px solid ${primary};background:#f7f7f7">
+             <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#666">Qué necesitamos</p>
+             <p style="margin:0"><strong>${motivo}</strong></p>
+           </div>`
+        : `<p style="margin:20px 0"><strong>Escríbenos y te indicamos qué
+             falta para completar tu inscripción.</strong></p>`
+    }
+    <p>Escríbenos por WhatsApp con el comprobante corregido y lo revisamos
+    enseguida:</p>
+    <p style="margin:20px 0">
+      <a href="${whatsappHref}"
+         style="display:inline-block;background:${primary};color:${primaryContrast};text-decoration:none;font-weight:bold;text-transform:uppercase;letter-spacing:1px;padding:14px 28px;border-radius:4px">
+        Corregir mi inscripción
+      </a>
+    </p>
+    <p style="font-size:13px;color:#666">Si crees que se trata de un error,
+    responde a este correo y lo revisamos.</p>`,
   );
 }

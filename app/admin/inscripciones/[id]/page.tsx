@@ -161,6 +161,18 @@ export default async function InscripcionDetailPage({
               )}
             </li>
             <li>
+              Correo de rechazo:{" "}
+              {row.estado !== "rechazada" ? (
+                "no aplica"
+              ) : row.correo_rechazo_at ? (
+                <span className="font-medium text-foreground">
+                  enviado el {new Date(row.correo_rechazo_at).toLocaleString("es-EC")}
+                </span>
+              ) : (
+                <span className="font-medium text-primary">no enviado</span>
+              )}
+            </li>
+            <li>
               Check-in:{" "}
               {row.asistio_at ? (
                 <span className="font-medium text-foreground">
@@ -175,11 +187,9 @@ export default async function InscripcionDetailPage({
               )}
             </li>
           </ul>
-          {row.estado !== "rechazada" && (
-            <div className="mt-4">
-              <ReenviarCorreoButton id={row.id} />
-            </div>
-          )}
+          <div className="mt-4">
+            <ReenviarCorreoButton id={row.id} />
+          </div>
         </section>
 
         <section>

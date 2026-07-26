@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from "@/lib/supabase-server";
 import type { InscripcionRow } from "@/lib/inscripciones";
 import {
   enviarCorreoConfirmada,
+  enviarCorreoRechazo,
   enviarCorreoRecibida,
   rowParaCorreo,
 } from "@/lib/inscripcion-emails";
@@ -21,7 +22,7 @@ const actionSchema = z.object({
 async function marcarCorreoEnviado(
   supabase: SupabaseClient,
   id: string,
-  columna: "correo_recibida_at" | "correo_confirmada_at",
+  columna: "correo_recibida_at" | "correo_confirmada_at" | "correo_rechazo_at",
 ): Promise<string | undefined> {
   const { error } = await supabase
     .from("inscripciones")
@@ -164,7 +165,7 @@ export async function POST(
       }
 
       case "rechazar": {
-        const { data: updated, error } = await supabase
+        const { data: updatedData, error } = await supabase
           .from("inscripciones")
           .update({
             estado: "rechazada",
@@ -172,32 +173,66 @@ export async function POST(
             rechazo_motivo: motivo ?? null,
             dorsal: null,
             verificada_at: null,
+            // Se limpia el registro del Correo 2: si la inscripción se
+            // corrige y se vuelve a verificar, debe enviarse de nuevo (con
+            // el dorsal nuevo). Sin esto, el guard de idempotencia lo
+            // omitiría en silencio.
+            correo_confirmada_at: null,
           })
           .eq("id", id)
           .eq("event_slug", event.slug)
           .select()
           .single();
         if (error) throw error;
+        const updated = updatedData as InscripcionRow;
         logInfo(`Inscripción ${id} rechazada${motivo ? ` · motivo: ${motivo}` : ""}`);
-        // TODO(D3): correo de rechazo en tono "acción requerida" con el
-        // motivo y CTA de WhatsApp del organizador.
-        return NextResponse.json({ ok: true, inscripcion: updated });
+
+        const { sent, reason } = await enviarCorreoRechazo(
+          event,
+          rowParaCorreo(updated),
+          motivo,
+        );
+        let emailError = reason;
+        if (sent) {
+          emailError = await marcarCorreoEnviado(
+            supabase,
+            id,
+            "correo_rechazo_at",
+          );
+        }
+        return NextResponse.json({
+          ok: true,
+          inscripcion: updated,
+          emailSent: sent,
+          ...(emailError && { emailError }),
+        });
       }
 
       case "reenviar-correo": {
-        if (row.estado === "rechazada") {
-          return NextResponse.json(
-            { error: "Una inscripción rechazada no tiene correo para reenviar." },
-            { status: 400 },
-          );
-        }
-        const esConfirmada = row.estado === "verificada";
+        // El correo que corresponde depende del estado actual
+        const correoPorEstado = {
+          pendiente: {
+            etiqueta: "Correo 1",
+            columna: "correo_recibida_at" as const,
+            enviar: () => enviarCorreoRecibida(event, rowParaCorreo(row)),
+          },
+          verificada: {
+            etiqueta: "Correo 2",
+            columna: "correo_confirmada_at" as const,
+            enviar: () => enviarCorreoConfirmada(event, rowParaCorreo(row)),
+          },
+          rechazada: {
+            etiqueta: "correo de rechazo",
+            columna: "correo_rechazo_at" as const,
+            enviar: () =>
+              enviarCorreoRechazo(event, rowParaCorreo(row), row.rechazo_motivo),
+          },
+        }[row.estado];
+
         logInfo(
-          `Reenviando ${esConfirmada ? "Correo 2" : "Correo 1"} de ${id} a ${row.email}`,
+          `Reenviando ${correoPorEstado.etiqueta} de ${id} a ${row.email}`,
         );
-        const { sent, reason } = esConfirmada
-          ? await enviarCorreoConfirmada(event, rowParaCorreo(row))
-          : await enviarCorreoRecibida(event, rowParaCorreo(row));
+        const { sent, reason } = await correoPorEstado.enviar();
         if (!sent) {
           return NextResponse.json(
             { error: `No se pudo enviar el correo (${reason ?? "razón desconocida"}).` },
@@ -207,7 +242,7 @@ export async function POST(
         const emailError = await marcarCorreoEnviado(
           supabase,
           id,
-          esConfirmada ? "correo_confirmada_at" : "correo_recibida_at",
+          correoPorEstado.columna,
         );
         return NextResponse.json({
           ok: true,

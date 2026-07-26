@@ -19,9 +19,14 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
 - **Fase D2 — HECHO**: Correo 2 ("inscripción confirmada") con PDF
   definitivo (dorsal + QR firmado), página `/admin/checkin` con "marcar
   presente", y botón de reenviar correo en el panel.
-- **Fase D3 — pendiente**: correo al rechazar, en tono "acción requerida"
+- **Fase D3 — HECHO**: correo al rechazar, en tono "acción requerida"
   (invita a corregir el comprobante y reintentar) con el motivo escrito
-  por el admin y CTA de WhatsApp.
+  por el admin y CTA de WhatsApp. **El módulo está completo.**
+
+> ⚠ El motivo del rechazo que se escribe en el panel **se le envía tal cual
+> al participante**. Redáctalo como un mensaje para él, no como nota
+> interna. El panel lo exige (mínimo 10 caracteres) porque un correo de
+> "revisa tu inscripción" sin explicación no sirve de nada.
 
 ## Cómo activar las inscripciones en línea (por evento)
 
@@ -52,10 +57,28 @@ el nombre visible del remitente sale del config del evento), `QR_SECRET`
 `EMAIL_TEST_REDIRECT` para desviar todos los correos a una dirección de
 prueba.
 
+Los tres correos del módulo:
+
+| Cuándo | Asunto | Adjunto | Timestamp |
+|---|---|---|---|
+| Al inscribirse | Inscripción recibida | PDF provisional | `correo_recibida_at` |
+| Al verificar el pago | ¡Inscripción confirmada! | PDF con dorsal + QR | `correo_confirmada_at` |
+| Al rechazar | Revisa tu inscripción | — | `correo_rechazo_at` |
+
 Ningún correo decide el destino de una inscripción: si Resend falla, la
-inscripción se guarda / verifica igual, el panel muestra el correo como "no
-enviado" y ofrece **Reenviar correo**. Sin `QR_SECRET`, el PDF definitivo se
-emite sin QR (queda registrado en los logs) en lugar de fallar.
+inscripción se guarda / verifica / rechaza igual, el panel muestra el correo
+como "no enviado" y ofrece **Reenviar correo** (reenvía el que corresponda
+al estado actual). Sin `QR_SECRET`, el PDF definitivo se emite sin QR (queda
+registrado en los logs) en lugar de fallar.
+
+Todo el módulo loguea con el prefijo `[inscripciones]`: para depurar un
+envío, filtra por ahí en la terminal o en los logs de Vercel. Para
+diagnosticar la cadena completa contra la base real:
+`npm run diagnose:downhill -- <id> [--enviar] [--marcar]`.
+
+Rechazar limpia `dorsal`, `verificada_at` y `correo_confirmada_at`: si la
+persona corrige y se vuelve a verificar, recibe un dorsal nuevo y su Correo
+2 se envía otra vez.
 
 Tope del plan gratuito de Resend: 100 correos/día. Si se agota en un pico de
 inscripciones, los correos no enviados se recuperan con el botón de reenviar.

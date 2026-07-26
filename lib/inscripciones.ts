@@ -20,6 +20,7 @@ export interface InscripcionRow {
   rechazo_motivo: string | null;
   correo_recibida_at: string | null;
   correo_confirmada_at: string | null;
+  correo_rechazo_at: string | null;
   asistio_at: string | null;
 }
 

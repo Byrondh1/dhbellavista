@@ -3,6 +3,7 @@ import type { EventConfig } from "./types";
 import type { InscripcionRow } from "./inscripciones";
 import {
   correoConfirmadaHtml,
+  correoRechazoHtml,
   correoRecibidaHtml,
   sendEventEmail,
   type EmailResult,
@@ -145,4 +146,38 @@ export async function enviarCorreoConfirmada(
     logError(`Correo 2 falló para la inscripción ${inscripcion.id}`, error);
     return { sent: false, reason };
   }
+}
+
+/**
+ * Correo de rechazo: "revisa tu inscripción". Sin PDF adjunto — el objetivo
+ * es que la persona corrija y vuelva, no entregarle un documento. El motivo
+ * lo escribe el admin en el panel y se le muestra tal cual. Nunca lanza.
+ */
+export async function enviarCorreoRechazo(
+  event: EventConfig,
+  inscripcion: InscripcionParaCorreo,
+  motivo: string | null | undefined,
+): Promise<EmailResult> {
+  const datos = validarDatos(inscripcion);
+  if (!datos.ok) {
+    logError(
+      `Correo de rechazo omitido (${inscripcion.id}): ${datos.reason}`,
+      inscripcion,
+    );
+    return { sent: false, reason: datos.reason };
+  }
+
+  if (!motivo) {
+    logWarn(
+      `Correo de rechazo (${inscripcion.id}): sin motivo, se envía el texto genérico.`,
+    );
+  }
+
+  logInfo(`Correo de rechazo: enviando a ${inscripcion.email} (${inscripcion.id})`);
+  return await sendEventEmail({
+    event,
+    to: inscripcion.email,
+    subject: `Revisa tu inscripción — ${event.name}`,
+    html: correoRechazoHtml(event, inscripcion.nombre, motivo),
+  });
 }
