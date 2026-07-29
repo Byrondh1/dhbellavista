@@ -14,7 +14,13 @@ import {
 import { describeError, logError, logInfo, logWarn } from "@/lib/logger";
 
 const actionSchema = z.object({
-  action: z.enum(["verificar", "rechazar", "reenviar-correo", "checkin"]),
+  action: z.enum([
+    "verificar",
+    "revertir-verificacion",
+    "rechazar",
+    "reenviar-correo",
+    "checkin",
+  ]),
   motivo: z.string().trim().max(300).optional(),
 });
 
@@ -161,6 +167,51 @@ export async function POST(
           inscripcion: updated,
           emailSent: sent,
           ...(emailError && { emailError }),
+        });
+      }
+
+      case "revertir-verificacion": {
+        // Deshace una verificación hecha por error. Un solo UPDATE (atómico
+        // en Postgres) deja la fila coherente: sin dorsal, sin timestamps de
+        // verificación ni de correo —para que al re-verificar salga el
+        // Correo 2— y sin check-in, porque una inscripción pendiente no
+        // puede figurar como presente.
+        // La condición sobre estado evita pisar datos si otra pestaña ya la
+        // revirtió o la rechazó entretanto.
+        const { data: updatedData, error } = await supabase
+          .from("inscripciones")
+          .update({
+            estado: "pendiente",
+            dorsal: null,
+            verificada_at: null,
+            correo_confirmada_at: null,
+            asistio_at: null,
+          })
+          .eq("id", id)
+          .eq("event_slug", event.slug)
+          .eq("estado", "verificada")
+          .select()
+          .maybeSingle();
+        if (error) throw error;
+        if (!updatedData) {
+          logWarn(
+            `Revertir omitido en ${id}: ya no estaba verificada (estado actual: ${row.estado}).`,
+          );
+          return NextResponse.json(
+            {
+              error: `La inscripción ya no está verificada (estado actual: ${row.estado}). Recarga la página.`,
+            },
+            { status: 409 },
+          );
+        }
+        logInfo(
+          `Verificación revertida en ${id} · dorsal ${row.dorsal ?? "—"} liberado${row.asistio_at ? " · se borró el check-in" : ""}`,
+        );
+        return NextResponse.json({
+          ok: true,
+          inscripcion: updatedData as InscripcionRow,
+          dorsalLiberado: row.dorsal,
+          checkinBorrado: Boolean(row.asistio_at),
         });
       }
 

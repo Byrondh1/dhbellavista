@@ -3,16 +3,23 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+type Accion = "verificar" | "rechazar" | "revertir-verificacion";
+
 /**
- * Botones verificar/rechazar del detalle de una inscripción. Llaman al
- * endpoint admin (que valida la sesión en servidor) y refrescan la página.
+ * Acciones del detalle de una inscripción (verificar / rechazar / revertir).
+ * Llaman al endpoint admin (que valida la sesión en servidor) y refrescan
+ * la página.
  */
 export function InscripcionActions({
   id,
   estado,
+  dorsal,
+  asistioAt,
 }: {
   id: string;
   estado: string;
+  dorsal: number | null;
+  asistioAt: string | null;
 }) {
   const router = useRouter();
   const [motivo, setMotivo] = useState("");
@@ -20,7 +27,7 @@ export function InscripcionActions({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function act(action: "verificar" | "rechazar") {
+  async function act(action: Accion) {
     setBusy(true);
     setError(null);
     try {
@@ -36,7 +43,8 @@ export function InscripcionActions({
       }
       // La acción sí funcionó, pero el correo pudo fallar: se muestra la
       // razón en lugar de dejarlo pasar en silencio.
-      if (body?.emailSent === false) {
+      // Revertir no envía correos; verificar y rechazar sí.
+      if (action !== "revertir-verificacion" && body?.emailSent === false) {
         const queHizo =
           action === "verificar" ? "Inscripción verificada" : "Inscripción rechazada";
         setError(
@@ -52,11 +60,39 @@ export function InscripcionActions({
   }
 
   if (estado === "verificada") {
+    const advertencias = [
+      `Se liberará el dorsal ${dorsal ?? "asignado"} y la inscripción volverá a estado pendiente.`,
+      "El participante ya tiene un PDF con ese dorsal que dejará de ser válido (su QR mostrará \"inscripción no vigente\"). Avísale tú si hace falta: revertir no envía ningún correo.",
+      ...(asistioAt
+        ? ["⚠ SE BORRARÁ su registro de check-in (ya estaba marcado como presente)."]
+        : []),
+      "",
+      "¿Continuar?",
+    ].join("\n\n");
+
     return (
-      <p className="text-sm text-muted">
-        Inscripción verificada. Para revertirla, contacta soporte de la base
-        de datos (no se revierte desde el panel).
-      </p>
+      <div className="space-y-4">
+        <p className="text-sm text-muted">
+          Inscripción verificada. Si la verificaste por error, puedes
+          revertirla: vuelve a pendiente y podrás verificarla de nuevo (con un
+          dorsal nuevo) o rechazarla con un motivo.
+        </p>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            if (window.confirm(advertencias)) act("revertir-verificacion");
+          }}
+          className="rounded-brand border-2 border-current px-6 py-3 font-semibold uppercase tracking-wide text-foreground disabled:opacity-60"
+        >
+          {busy ? "Revirtiendo…" : "Revertir verificación"}
+        </button>
+        {error && (
+          <p role="alert" className="text-sm text-primary">
+            {error}
+          </p>
+        )}
+      </div>
     );
   }
 

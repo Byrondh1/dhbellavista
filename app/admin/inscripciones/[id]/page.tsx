@@ -194,7 +194,12 @@ export default async function InscripcionDetailPage({
 
         <section>
           <h2 className="mb-3 text-lg font-bold uppercase">Acciones</h2>
-          <InscripcionActions id={row.id} estado={row.estado} />
+          <InscripcionActions
+            id={row.id}
+            estado={row.estado}
+            dorsal={row.dorsal}
+            asistioAt={row.asistio_at}
+          />
         </section>
       </Container>
     </main>

@@ -80,6 +80,25 @@ Rechazar limpia `dorsal`, `verificada_at` y `correo_confirmada_at`: si la
 persona corrige y se vuelve a verificar, recibe un dorsal nuevo y su Correo
 2 se envía otra vez.
 
+## Corregir errores de operación
+
+**Verifiqué una inscripción por error** → botón **"Revertir verificación"**
+en el detalle. En una sola operación vuelve a `pendiente`, libera el dorsal
+y limpia `verificada_at`, `correo_confirmada_at` y `asistio_at`; desde ahí
+puedes verificarla de nuevo o rechazarla con motivo. Nunca hay que tocar la
+base a mano.
+
+Dos comportamientos a tener en cuenta:
+
+- **Revertir no envía ningún correo.** La persona conserva en su bandeja el
+  PDF con el dorsal anterior. Si el caso lo amerita, avísale por WhatsApp o
+  recházala con un motivo (eso sí manda correo).
+- **El dorsal liberado no se reutiliza**: la numeración siempre toma
+  `max(dorsal)+1` dentro de la categoría, así nunca circulan dos PDFs con el
+  mismo número. Quedan huecos en la secuencia, y está bien.
+- El QR viejo se invalida solo: `/admin/checkin` contrasta dorsal y estado
+  contra la base, así que muestra "Inscripción no vigente".
+
 Tope del plan gratuito de Resend: 100 correos/día. Si se agota en un pico de
 inscripciones, los correos no enviados se recuperan con el botón de reenviar.
 
