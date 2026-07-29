@@ -49,6 +49,33 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
 Si Supabase no está configurado y el modo es `"modal"`, el endpoint responde
 503 con un mensaje que redirige a WhatsApp — el sitio no se rompe.
 
+## Instrucciones de pago (primer paso del modal)
+
+Si el evento define `registrationForm.datosPago` con `mostrar: true`, el
+modal abre en un paso previo con los datos bancarios y el monto, y solo tras
+"Ya realicé el pago, continuar" aparece el formulario. Desde el formulario se
+puede volver con "← Ver datos de pago".
+
+```ts
+datosPago: {
+  mostrar: true,              // false lo apaga sin borrar los datos
+  banco: "Banco Pichincha",
+  tipoCuenta: "Ahorros",
+  numeroCuenta: "2201234567",
+  titular: "Nombre del titular",
+  identificacionTitular: "0401234567",
+  monto: "$25 (categoría Juvenil: $15)",
+  intro: "…",                 // opcional, sustituye el texto de arriba
+  notas: ["…"],               // opcional, avisos bajo los datos
+}
+```
+
+Los datos bancarios **solo se ven dentro del modal**, nunca en la landing
+pública: la sección Costos sigue mostrando `sections.pricing.paymentInfo`
+(texto libre, sin número de cuenta), para no dejar la cuenta indexable.
+Si las inscripciones están cerradas (`closed: true`), el modal muestra ese
+mensaje y **no** llega a mostrar los datos bancarios.
+
 ## Correos (Resend)
 
 Variables de servidor: `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS` (la dirección;

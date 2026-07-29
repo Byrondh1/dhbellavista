@@ -8,6 +8,7 @@ import {
   DEFAULT_CONSENT_TEXT,
 } from "@/lib/registration-schema";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { PasoDatosPago } from "./PasoDatosPago";
 
 const OPEN_HASH = "#inscribirse";
 
@@ -41,6 +42,12 @@ export function RegistrationModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
+  // El paso de pago solo existe si el evento lo configura
+  const datosPago = form.datosPago?.mostrar ? form.datosPago : null;
+  const [paso, setPaso] = useState<"pago" | "formulario">(
+    datosPago ? "pago" : "formulario",
+  );
+
   const close = useCallback(() => {
     setOpen(false);
     if (window.location.hash === OPEN_HASH) {
@@ -53,16 +60,22 @@ export function RegistrationModal({
   }, []);
 
   useEffect(() => {
-    const sync = () => setOpen(window.location.hash === OPEN_HASH);
+    const sync = () => {
+      const abierto = window.location.hash === OPEN_HASH;
+      setOpen(abierto);
+      // Cada apertura empieza por el principio (el formulario no persiste
+      // nada al cerrarse, así que no hay progreso que respetar)
+      if (abierto) setPaso(datosPago ? "pago" : "formulario");
+    };
     sync();
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
-  }, []);
+  }, [datosPago]);
 
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
-    firstFieldRef.current?.focus();
+    if (paso === "formulario") firstFieldRef.current?.focus();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
     };
@@ -71,7 +84,7 @@ export function RegistrationModal({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, close]);
+  }, [open, close, paso]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -141,7 +154,11 @@ export function RegistrationModal({
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-primary">
-              Inscripción
+              {datosPago && !form.closed && status.kind !== "success"
+                ? paso === "pago"
+                  ? "Paso 1 de 2 · Pago"
+                  : "Paso 2 de 2 · Tus datos"
+                : "Inscripción"}
             </p>
             <h2 className="text-2xl font-bold uppercase">{eventName}</h2>
           </div>
@@ -155,11 +172,19 @@ export function RegistrationModal({
           </button>
         </div>
 
+        {/* Si las inscripciones están cerradas no se muestran los datos
+            bancarios: el mensaje va antes que cualquier paso. */}
         {form.closed ? (
           <p className="text-lg text-muted">
             Las inscripciones están cerradas. Gracias por el interés — nos
             vemos en la próxima edición.
           </p>
+        ) : datosPago && paso === "pago" ? (
+          <PasoDatosPago
+            datos={datosPago}
+            onContinuar={() => setPaso("formulario")}
+            onCancelar={close}
+          />
         ) : status.kind === "success" ? (
           <div>
             <h3 className="text-xl font-bold text-primary">
@@ -180,6 +205,18 @@ export function RegistrationModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Volver a consultar la cuenta sin perder lo escrito: en móvil
+                la gente sale a hacer la transferencia y regresa */}
+            {datosPago && (
+              <button
+                type="button"
+                onClick={() => setPaso("pago")}
+                className="text-sm font-medium text-muted hover:text-primary"
+              >
+                ← Ver datos de pago
+              </button>
+            )}
+
             {/* Honeypot anti-spam: oculto para humanos */}
             <input
               type="text"
