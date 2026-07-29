@@ -117,32 +117,6 @@ export interface PricingSection {
   deadlineLabel?: string;
 }
 
-/**
- * Datos bancarios del evento, mostrados como primer paso del modal antes
- * del formulario ("realiza tu depósito a esta cuenta"). Cada evento tiene
- * su propia cuenta.
- *
- * Solo se ven dentro del modal, nunca en la landing pública: la sección de
- * Costos sigue usando `PricingSection.paymentInfo` (texto libre) para no
- * exponer el número de cuenta a buscadores.
- */
-export interface DatosPago {
-  /** false oculta el paso conservando los datos (útil para pruebas) */
-  mostrar: boolean;
-  banco: string;
-  /** "Ahorros", "Corriente"… */
-  tipoCuenta: string;
-  numeroCuenta: string;
-  titular: string;
-  /** Cédula o RUC del titular, para que el banco valide el destinatario */
-  identificacionTitular: string;
-  /** Texto libre, ej. "$25" o "$25 (juvenil $15)" */
-  monto: string;
-  /** Sustituye el texto introductorio por defecto */
-  intro?: string;
-  /** Avisos extra bajo los datos, ej. "guarda el comprobante" */
-  notas?: string[];
-}
 
 /**
  * Formulario del módulo propio de inscripciones (modal). Se usa cuando
@@ -160,11 +134,6 @@ export interface RegistrationFormConfig {
   };
   /** Pedir comprobante de transferencia (imagen o PDF) */
   comprobante: boolean;
-  /**
-   * Instrucciones de pago mostradas ANTES del formulario. Si se omite (o
-   * `mostrar: false`), el modal abre directo en el formulario.
-   */
-  datosPago?: DatosPago;
   /** Muestra "inscripciones cerradas" en lugar del formulario */
   closed?: boolean;
   /** Aviso de uso de datos personales (importante: se recoge cédula) */

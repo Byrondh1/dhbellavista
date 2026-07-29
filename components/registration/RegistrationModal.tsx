@@ -8,7 +8,7 @@ import {
   DEFAULT_CONSENT_TEXT,
 } from "@/lib/registration-schema";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
-import { PasoDatosPago } from "./PasoDatosPago";
+import { PasoDatosPago, type DatosPagoVisible } from "./PasoDatosPago";
 
 const OPEN_HASH = "#inscribirse";
 
@@ -42,11 +42,17 @@ export function RegistrationModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
-  // El paso de pago solo existe si el evento lo configura
-  const datosPago = form.datosPago?.mostrar ? form.datosPago : null;
-  const [paso, setPaso] = useState<"pago" | "formulario">(
-    datosPago ? "pago" : "formulario",
-  );
+  // Los datos de pago viven en la base (editables desde /admin/configuracion),
+  // así que se piden al abrir el modal: "cargando" → datos | null (sin paso
+  // de pago) | "error" (no se pudieron cargar).
+  const [datosPago, setDatosPago] = useState<
+    DatosPagoVisible | null | "cargando" | "error"
+  >("cargando");
+  const [paso, setPaso] = useState<"pago" | "formulario">("pago");
+  /** Los datos reales, o null mientras carga / si no hay / si falló */
+  const datosPagoListos =
+    typeof datosPago === "object" && datosPago !== null ? datosPago : null;
+  const hayDatosPago = datosPagoListos !== null;
 
   const close = useCallback(() => {
     setOpen(false);
@@ -65,12 +71,32 @@ export function RegistrationModal({
       setOpen(abierto);
       // Cada apertura empieza por el principio (el formulario no persiste
       // nada al cerrarse, así que no hay progreso que respetar)
-      if (abierto) setPaso(datosPago ? "pago" : "formulario");
+      if (abierto) setPaso("pago");
     };
     sync();
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
-  }, [datosPago]);
+  }, []);
+
+  // Carga de los datos de pago al abrir. Un fallo nunca bloquea la
+  // inscripción: se muestra un aviso con el canal de WhatsApp.
+  useEffect(() => {
+    if (!open || form.closed) return;
+    let cancelado = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/datos-pago", { cache: "no-store" });
+        if (!res.ok) throw new Error(String(res.status));
+        const body = await res.json();
+        if (!cancelado) setDatosPago(body?.datosPago ?? null);
+      } catch {
+        if (!cancelado) setDatosPago("error");
+      }
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [open, form.closed]);
 
   useEffect(() => {
     if (!open) return;
@@ -154,7 +180,7 @@ export function RegistrationModal({
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-primary">
-              {datosPago && !form.closed && status.kind !== "success"
+              {hayDatosPago && !form.closed && status.kind !== "success"
                 ? paso === "pago"
                   ? "Paso 1 de 2 · Pago"
                   : "Paso 2 de 2 · Tus datos"
@@ -179,9 +205,35 @@ export function RegistrationModal({
             Las inscripciones están cerradas. Gracias por el interés — nos
             vemos en la próxima edición.
           </p>
-        ) : datosPago && paso === "pago" ? (
+        ) : paso === "pago" && datosPago === "cargando" ? (
+          <p className="py-8 text-center text-muted">Cargando datos de pago…</p>
+        ) : paso === "pago" && datosPago === "error" ? (
+          <div className="space-y-5">
+            <p className="text-muted">
+              No pudimos cargar los datos de pago en este momento. Escríbenos
+              por WhatsApp y te los enviamos, o continúa y súbenos el
+              comprobante cuando hayas pagado.
+            </p>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-brand border border-border px-6 py-3 font-semibold uppercase tracking-wide text-foreground"
+            >
+              <WhatsAppIcon className="h-5 w-5" />
+              Pedir datos por WhatsApp
+            </a>
+            <button
+              type="button"
+              onClick={() => setPaso("formulario")}
+              className="w-full rounded-brand bg-primary px-6 py-3 font-semibold uppercase tracking-wide text-primary-contrast"
+            >
+              Continuar al formulario
+            </button>
+          </div>
+        ) : paso === "pago" && datosPagoListos ? (
           <PasoDatosPago
-            datos={datosPago}
+            datos={datosPagoListos}
             onContinuar={() => setPaso("formulario")}
             onCancelar={close}
           />
@@ -207,7 +259,7 @@ export function RegistrationModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Volver a consultar la cuenta sin perder lo escrito: en móvil
                 la gente sale a hacer la transferencia y regresa */}
-            {datosPago && (
+            {hayDatosPago && (
               <button
                 type="button"
                 onClick={() => setPaso("pago")}

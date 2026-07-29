@@ -96,22 +96,6 @@ const config: EventConfig = {
     comprobante: true,
     privacyNote:
       "Tus datos se usan únicamente para la organización del evento y no se comparten con terceros.",
-
-    // TODO(Byron): datos bancarios REALES de la cuenta del Downhill.
-    // Solo se muestran dentro del modal, nunca en la landing pública.
-    datosPago: {
-      mostrar: true,
-      banco: "Banco Pichincha",
-      tipoCuenta: "Ahorros",
-      numeroCuenta: "0000000000",
-      titular: "Nombre del titular",
-      identificacionTitular: "0000000000",
-      monto: "$25 (categoría Juvenil: $15)",
-      notas: [
-        "Si eres de la categoría Juvenil, transfiere $15.",
-        "El comprobante debe mostrar el monto, la fecha y el número de transacción.",
-      ],
-    },
   },
 
   theme: {

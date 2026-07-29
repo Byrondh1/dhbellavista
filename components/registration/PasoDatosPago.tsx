@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { DatosPago } from "@/lib/types";
+import type { DatosPago } from "@/lib/datos-pago";
+
+/** Lo que expone /api/datos-pago: los campos visibles, sin `activo` */
+export type DatosPagoVisible = Omit<DatosPago, "activo">;
 
 /** Fila etiqueta/valor de los datos bancarios (apilada en móvil) */
 function Dato({
@@ -61,7 +64,7 @@ export function PasoDatosPago({
   onContinuar,
   onCancelar,
 }: {
-  datos: DatosPago;
+  datos: DatosPagoVisible;
   onContinuar: () => void;
   onCancelar: () => void;
 }) {

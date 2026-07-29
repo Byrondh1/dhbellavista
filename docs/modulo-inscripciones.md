@@ -51,30 +51,34 @@ Si Supabase no está configurado y el modo es `"modal"`, el endpoint responde
 
 ## Instrucciones de pago (primer paso del modal)
 
-Si el evento define `registrationForm.datosPago` con `mostrar: true`, el
-modal abre en un paso previo con los datos bancarios y el monto, y solo tras
-"Ya realicé el pago, continuar" aparece el formulario. Desde el formulario se
-puede volver con "← Ver datos de pago".
+Los datos bancarios se editan desde el panel: **/admin/configuracion**
+(enlace "Datos de pago" en la cabecera del panel). Se guardan en la tabla
+`evento_datos_pago` de Supabase, una fila por evento, así que cambiar una
+cuenta **no requiere tocar código ni redesplegar**.
 
-```ts
-datosPago: {
-  mostrar: true,              // false lo apaga sin borrar los datos
-  banco: "Banco Pichincha",
-  tipoCuenta: "Ahorros",
-  numeroCuenta: "2201234567",
-  titular: "Nombre del titular",
-  identificacionTitular: "0401234567",
-  monto: "$25 (categoría Juvenil: $15)",
-  intro: "…",                 // opcional, sustituye el texto de arriba
-  notas: ["…"],               // opcional, avisos bajo los datos
-}
-```
+Campos: banco, tipo de cuenta, número de cuenta, titular, cédula/RUC del
+titular, monto, texto introductorio opcional y hasta 5 notas. El interruptor
+"mostrar el paso de pago" lo apaga sin borrar los datos.
 
-Los datos bancarios **solo se ven dentro del modal**, nunca en la landing
-pública: la sección Costos sigue mostrando `sections.pricing.paymentInfo`
-(texto libre, sin número de cuenta), para no dejar la cuenta indexable.
-Si las inscripciones están cerradas (`closed: true`), el modal muestra ese
-mensaje y **no** llega a mostrar los datos bancarios.
+Cómo lo consume el sitio: al abrir el modal, el cliente pide
+`GET /api/datos-pago` (sin caché, para que una edición se vea al instante).
+Ese endpoint corre en servidor con service role, responde **solo** los campos
+visibles —nunca `updated_by`/`updated_at`— y no acepta parámetros, así que
+siempre devuelve los del evento de este build.
+
+Comportamiento cuando no hay datos:
+
+- **Sin fila o `activo=false`** → el modal abre directo en el formulario
+  (nunca campos vacíos).
+- **Si la lectura falla** → se muestra un aviso con botón de WhatsApp para
+  pedir los datos, y la opción de continuar igual al formulario: un fallo de
+  lectura jamás bloquea una inscripción.
+- **Inscripciones cerradas** (`closed`) se evalúa antes que todo: no se
+  muestran datos bancarios.
+
+Los datos siguen sin aparecer en la landing pública (no están en el HTML, así
+que no son indexables); la sección Costos sigue usando el texto libre de
+`sections.pricing.paymentInfo`.
 
 ## Correos (Resend)
 

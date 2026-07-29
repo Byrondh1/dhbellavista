@@ -76,7 +76,15 @@ export default async function AdminPage({
             </p>
             <h1 className="text-3xl font-bold uppercase">{event.name}</h1>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/configuracion"
+              className="rounded-brand border border-border px-4 py-2 text-sm font-medium text-muted hover:text-foreground"
+            >
+              Datos de pago
+            </Link>
+            <LogoutButton />
+          </div>
         </div>
 
         <dl className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
