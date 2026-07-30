@@ -7,6 +7,7 @@ import {
   COMPROBANTE_TYPES,
   DEFAULT_CONSENT_TEXT,
 } from "@/lib/registration-schema";
+import { MENSAJE_CIERRE_POR_DEFECTO } from "@/lib/estado-inscripciones";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { PasoDatosPago, type DatosPagoVisible } from "./PasoDatosPago";
 
@@ -17,6 +18,18 @@ type Status =
   | { kind: "sending" }
   | { kind: "success"; emailSent: boolean }
   | { kind: "error"; message: string };
+
+/** Lo que devuelve GET /api/estado-inscripciones, más los estados de carga */
+type Carga =
+  | { kind: "cargando" }
+  | { kind: "error" }
+  | {
+      kind: "listo";
+      cerradas: boolean;
+      mensajeCierre: string | null;
+      /** null si el evento no tiene datos de pago o el paso está apagado */
+      datosPago: DatosPagoVisible | null;
+    };
 
 const inputClasses =
   "w-full rounded-brand border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted focus:border-primary";
@@ -42,16 +55,22 @@ export function RegistrationModal({
   const dialogRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
-  // Los datos de pago viven en la base (editables desde /admin/configuracion),
-  // así que se piden al abrir el modal: "cargando" → datos | null (sin paso
-  // de pago) | "error" (no se pudieron cargar).
-  const [datosPago, setDatosPago] = useState<
-    DatosPagoVisible | null | "cargando" | "error"
-  >("cargando");
+  // El estado de las inscripciones y los datos de pago viven en la base
+  // (editables desde /admin/configuracion), así que se piden al abrir el
+  // modal en una sola petición.
+  const [carga, setCarga] = useState<Carga>({ kind: "cargando" });
   const [paso, setPaso] = useState<"pago" | "formulario">("pago");
+
+  /**
+   * `closed` en el config es un candado de código que gana siempre; el
+   * interruptor del panel es el que se usa a diario. Cerrado si cualquiera de
+   * los dos lo dice: así nunca se queda abierto por error.
+   */
+  const cerradoPorConfig = form.closed === true;
+  const cerradas =
+    cerradoPorConfig || (carga.kind === "listo" && carga.cerradas);
   /** Los datos reales, o null mientras carga / si no hay / si falló */
-  const datosPagoListos =
-    typeof datosPago === "object" && datosPago !== null ? datosPago : null;
+  const datosPagoListos = carga.kind === "listo" ? carga.datosPago : null;
   const hayDatosPago = datosPagoListos !== null;
 
   const close = useCallback(() => {
@@ -78,25 +97,35 @@ export function RegistrationModal({
     return () => window.removeEventListener("hashchange", sync);
   }, []);
 
-  // Carga de los datos de pago al abrir. Un fallo nunca bloquea la
-  // inscripción: se muestra un aviso con el canal de WhatsApp.
+  // Carga al abrir (sin caché, para que un cambio en el panel se vea al
+  // instante). Un fallo nunca bloquea la inscripción: se muestra un aviso con
+  // el canal de WhatsApp y el endpoint queda como última palabra — si las
+  // inscripciones estaban cerradas, responderá 403 y el modal lo dirá.
   useEffect(() => {
-    if (!open || form.closed) return;
+    if (!open || cerradoPorConfig) return;
     let cancelado = false;
     (async () => {
       try {
-        const res = await fetch("/api/datos-pago", { cache: "no-store" });
+        const res = await fetch("/api/estado-inscripciones", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error(String(res.status));
         const body = await res.json();
-        if (!cancelado) setDatosPago(body?.datosPago ?? null);
+        if (cancelado) return;
+        setCarga({
+          kind: "listo",
+          cerradas: body?.cerradas === true,
+          mensajeCierre: body?.mensajeCierre ?? null,
+          datosPago: body?.datosPago ?? null,
+        });
       } catch {
-        if (!cancelado) setDatosPago("error");
+        if (!cancelado) setCarga({ kind: "error" });
       }
     })();
     return () => {
       cancelado = true;
     };
-  }, [open, form.closed]);
+  }, [open, cerradoPorConfig]);
 
   useEffect(() => {
     if (!open) return;
@@ -180,7 +209,7 @@ export function RegistrationModal({
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-primary">
-              {hayDatosPago && !form.closed && status.kind !== "success"
+              {hayDatosPago && !cerradas && status.kind !== "success"
                 ? paso === "pago"
                   ? "Paso 1 de 2 · Pago"
                   : "Paso 2 de 2 · Tus datos"
@@ -199,15 +228,16 @@ export function RegistrationModal({
         </div>
 
         {/* Si las inscripciones están cerradas no se muestran los datos
-            bancarios: el mensaje va antes que cualquier paso. */}
-        {form.closed ? (
+            bancarios: el mensaje va antes que cualquier paso. El servidor ni
+            siquiera los manda en ese caso. */}
+        {cerradas ? (
           <p className="text-lg text-muted">
-            Las inscripciones están cerradas. Gracias por el interés — nos
-            vemos en la próxima edición.
+            {(carga.kind === "listo" && carga.mensajeCierre) ||
+              MENSAJE_CIERRE_POR_DEFECTO}
           </p>
-        ) : paso === "pago" && datosPago === "cargando" ? (
-          <p className="py-8 text-center text-muted">Cargando datos de pago…</p>
-        ) : paso === "pago" && datosPago === "error" ? (
+        ) : carga.kind === "cargando" ? (
+          <p className="py-8 text-center text-muted">Cargando…</p>
+        ) : carga.kind === "error" && paso === "pago" ? (
           <div className="space-y-5">
             <p className="text-muted">
               No pudimos cargar los datos de pago en este momento. Escríbenos

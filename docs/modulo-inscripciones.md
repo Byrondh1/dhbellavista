@@ -22,6 +22,9 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
 - **Fase D3 — HECHO**: correo al rechazar, en tono "acción requerida"
   (invita a corregir el comprobante y reintentar) con el motivo escrito
   por el admin y CTA de WhatsApp. **El módulo está completo.**
+- **Operación sin redesplegar — HECHO**: datos de pago (migración 0006) y
+  apertura/cierre de inscripciones con mensaje de cierre (migración 0007) se
+  editan desde `/admin/configuracion`.
 
 > ⚠ El motivo del rechazo que se escribe en el panel **se le envía tal cual
 > al participante**. Redáctalo como un mensaje para él, no como nota
@@ -44,37 +47,73 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
    `SUPABASE_SERVICE_ROLE_KEY` (Settings → API del proyecto Supabase).
 3. En el config del evento, cambiar `registrationCta.mode` a `"modal"` y
    ajustar `registrationForm` (campos, comprobante, `privacyNote`).
-4. Para cerrar inscripciones: `registrationForm.closed: true`.
+4. Cargar los datos de pago y abrir las inscripciones en **/admin/configuracion**.
 
 Si Supabase no está configurado y el modo es `"modal"`, el endpoint responde
 503 con un mensaje que redirige a WhatsApp — el sitio no se rompe.
 
+## Abrir y cerrar inscripciones
+
+Se hace desde **/admin/configuracion** (enlace "Configuración" en la cabecera
+del panel), sección "Estado de las inscripciones". Surte efecto al instante,
+sin redesplegar. Se guarda en la misma fila que los datos de pago
+(`evento_datos_pago.inscripciones_cerradas`, migración 0007).
+
+Al cerrar:
+
+- El modal muestra el **mensaje de cierre** (editable ahí mismo, 300
+  caracteres) en lugar del formulario. Si lo dejas vacío sale un texto por
+  defecto. Sirve para decir el motivo: cupos llenos, se venció el plazo,
+  inscripciones el día del evento…
+- `POST /api/inscripciones` responde **403** aunque alguien intente enviar el
+  formulario a mano: la base es la palabra final, no el navegador.
+- Los datos bancarios **no se envían al navegador** en ese estado.
+- No se borra nada: las inscripciones ya recibidas se siguen verificando,
+  acreditando y exportando con normalidad.
+- El panel muestra un aviso arriba mientras estén cerradas — es la
+  explicación más probable de "no me llegan inscripciones nuevas".
+
+Queda además `registrationForm.closed` en el config como **candado de
+código**: si está en `true` cierra las inscripciones aunque el panel las tenga
+abiertas, y sin depender de la base. Cerrado si cualquiera de los dos lo dice,
+así que no hay forma de quedarse abierto por error; a cambio, si algún día lo
+pones en el config, el interruptor del panel no podrá reabrir (el panel lo
+avisa en pantalla). Para el día a día usa el panel y deja el config sin
+definir.
+
+Si la lectura del estado falla (base caída), el sitio deja pasar la
+inscripción y el endpoint decide: un error transitorio no debe bloquear
+inscripciones, y si la base no responde el insert fallaría igual.
+
 ## Instrucciones de pago (primer paso del modal)
 
-Los datos bancarios se editan desde el panel: **/admin/configuracion**
-(enlace "Datos de pago" en la cabecera del panel). Se guardan en la tabla
-`evento_datos_pago` de Supabase, una fila por evento, así que cambiar una
-cuenta **no requiere tocar código ni redesplegar**.
+Los datos bancarios se editan en la misma pantalla, sección "Datos de pago".
+Se guardan en la tabla `evento_datos_pago` de Supabase, una fila por evento,
+así que cambiar una cuenta **no requiere tocar código ni redesplegar**.
 
 Campos: banco, tipo de cuenta, número de cuenta, titular, cédula/RUC del
 titular, monto, texto introductorio opcional y hasta 5 notas. El interruptor
 "mostrar el paso de pago" lo apaga sin borrar los datos.
 
 Cómo lo consume el sitio: al abrir el modal, el cliente pide
-`GET /api/datos-pago` (sin caché, para que una edición se vea al instante).
-Ese endpoint corre en servidor con service role, responde **solo** los campos
-visibles —nunca `updated_by`/`updated_at`— y no acepta parámetros, así que
-siempre devuelve los del evento de este build.
+`GET /api/estado-inscripciones` (sin caché, para que una edición se vea al
+instante). Una sola petición trae el estado de las inscripciones y los datos
+de pago: en conexiones lentas, dos serían dos esperas. Ese endpoint corre en
+servidor con service role, responde **solo** los campos visibles —nunca
+`updated_by`/`updated_at`— y no acepta parámetros, así que siempre devuelve
+los del evento de este build.
 
 Comportamiento cuando no hay datos:
 
-- **Sin fila o `activo=false`** → el modal abre directo en el formulario
-  (nunca campos vacíos).
+- **Sin fila, `activo=false` o campos en blanco** → el modal abre directo en
+  el formulario (nunca campos vacíos). Los campos pueden estar en blanco
+  porque desde la 0007 la fila puede haberse creado solo para cerrar las
+  inscripciones.
 - **Si la lectura falla** → se muestra un aviso con botón de WhatsApp para
   pedir los datos, y la opción de continuar igual al formulario: un fallo de
   lectura jamás bloquea una inscripción.
-- **Inscripciones cerradas** (`closed`) se evalúa antes que todo: no se
-  muestran datos bancarios.
+- **Inscripciones cerradas** se evalúa antes que todo, y el servidor ni
+  siquiera manda los datos bancarios.
 
 Los datos siguen sin aparecer en la landing pública (no están en el HTML, así
 que no son indexables); la sección Costos sigue usando el texto libre de

@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { enviarCorreoRecibida } from "@/lib/inscripcion-emails";
-import { logError, logWarn } from "@/lib/logger";
+import { describeError, logError, logInfo, logWarn } from "@/lib/logger";
 import { matchesSignature } from "@/lib/file-signature";
 import {
   buildRegistrationSchema,
@@ -41,6 +41,7 @@ export async function POST(request: Request) {
       { status: 404 },
     );
   }
+  // Candado de código: gana siempre, y no necesita la base para funcionar
   if (form.closed) {
     return NextResponse.json(
       { error: "Las inscripciones están cerradas." },
@@ -56,6 +57,28 @@ export async function POST(request: Request) {
           "Las inscripciones en línea aún no están disponibles. Inscríbete por WhatsApp mientras tanto.",
       },
       { status: 503 },
+    );
+  }
+
+  // Interruptor del panel (tabla evento_datos_pago): la palabra final sobre
+  // si se aceptan inscripciones, para que cerrarlas no dependa del cliente.
+  // Ante un error de lectura se deja pasar: el insert de más abajo fallaría
+  // igual si la base no responde, y si falta la migración 0007 el módulo debe
+  // seguir funcionando como antes (abiertas).
+  const { data: config, error: configError } = await supabase
+    .from("evento_datos_pago")
+    .select("inscripciones_cerradas")
+    .eq("event_slug", event.slug)
+    .maybeSingle();
+  if (configError) {
+    logWarn(
+      `No se pudo leer el estado de inscripciones de ${event.slug}: ${describeError(configError)}`,
+    );
+  } else if (config?.inscripciones_cerradas) {
+    logInfo(`Inscripción rechazada: ${event.slug} tiene las inscripciones cerradas.`);
+    return NextResponse.json(
+      { error: "Las inscripciones están cerradas." },
+      { status: 403 },
     );
   }
 

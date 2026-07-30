@@ -3,7 +3,10 @@
 import { useState } from "react";
 import type { DatosPago } from "@/lib/datos-pago";
 
-/** Lo que expone /api/datos-pago: los campos visibles, sin `activo` */
+/**
+ * Lo que expone GET /api/estado-inscripciones: los campos visibles, sin
+ * `activo` ni columnas de auditoría.
+ */
 export type DatosPagoVisible = Omit<DatosPago, "activo">;
 
 /** Fila etiqueta/valor de los datos bancarios (apilada en móvil) */
@@ -55,9 +58,9 @@ function Dato({
 }
 
 /**
- * Primer paso del modal de inscripción: a qué cuenta depositar. Solo
- * aparece si el evento define `registrationForm.datosPago` con
- * `mostrar: true`. Todos los datos salen del config del evento.
+ * Primer paso del modal de inscripción: a qué cuenta depositar. Solo aparece
+ * si el evento tiene datos de pago cargados y activos en el panel
+ * (/admin/configuracion) y las inscripciones están abiertas.
  */
 export function PasoDatosPago({
   datos,

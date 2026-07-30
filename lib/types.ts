@@ -134,7 +134,13 @@ export interface RegistrationFormConfig {
   };
   /** Pedir comprobante de transferencia (imagen o PDF) */
   comprobante: boolean;
-  /** Muestra "inscripciones cerradas" en lugar del formulario */
+  /**
+   * Candado de código: cierra las inscripciones aunque el panel las tenga
+   * abiertas, y sin depender de la base. Para el día a día NO se usa esto —
+   * se cierra desde /admin/configuracion (tabla evento_datos_pago), que surte
+   * efecto sin redesplegar. Déjalo sin definir salvo que quieras un cierre
+   * que nadie pueda revertir desde el panel.
+   */
   closed?: boolean;
   /** Aviso de uso de datos personales (importante: se recoge cédula) */
   privacyNote?: string;

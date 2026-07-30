@@ -21,7 +21,13 @@ export interface DatosPago {
   notas: string[];
 }
 
-/** Fila cruda de la tabla evento_datos_pago */
+/**
+ * Fila cruda de la tabla evento_datos_pago, que además de los datos
+ * bancarios guarda el estado de las inscripciones (ver migración 0007 y
+ * lib/estado-inscripciones.ts). Las columnas del estado son opcionales aquí
+ * a propósito: si la 0007 todavía no se ejecutó, la fila llega sin ellas y
+ * el sitio debe seguir funcionando.
+ */
 export interface DatosPagoRow {
   event_slug: string;
   activo: boolean;
@@ -33,6 +39,9 @@ export interface DatosPagoRow {
   monto: string;
   intro: string | null;
   notas: string[] | null;
+  inscripciones_cerradas?: boolean | null;
+  inscripciones_cerradas_at?: string | null;
+  mensaje_cierre?: string | null;
   updated_at: string;
   updated_by: string | null;
 }
@@ -49,6 +58,24 @@ export function rowToDatosPago(row: DatosPagoRow): DatosPago {
     intro: row.intro,
     notas: row.notas ?? [],
   };
+}
+
+/**
+ * ¿La fila tiene datos bancarios utilizables? Desde la migración 0007 puede
+ * existir una fila creada solo para cerrar las inscripciones, con los campos
+ * de pago en blanco. Sin esta comprobación el modal mostraría el paso de
+ * pago con casilleros vacíos, que es peor que no mostrarlo.
+ */
+export function datosPagoCompletos(datos: DatosPago | null): boolean {
+  if (!datos) return false;
+  return [
+    datos.banco,
+    datos.tipoCuenta,
+    datos.numeroCuenta,
+    datos.titular,
+    datos.identificacionTitular,
+    datos.monto,
+  ].every((valor) => valor.trim().length > 0);
 }
 
 export function datosPagoToRow(

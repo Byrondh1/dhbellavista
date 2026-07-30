@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import { ESTADO_LABELS, type InscripcionRow } from "@/lib/inscripciones";
+import type { DatosPagoRow } from "@/lib/datos-pago";
+import { rowToEstadoInscripciones } from "@/lib/estado-inscripciones";
 import { Container } from "@/components/ui/Container";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { EstadoBadge } from "@/components/admin/EstadoBadge";
@@ -44,6 +46,17 @@ export default async function AdminPage({
       </Container>
     );
   }
+
+  // Estado de las inscripciones, para avisar en grande si están cerradas: es
+  // la explicación más probable de "no me llegan inscripciones nuevas".
+  const { data: config } = await supabase
+    .from("evento_datos_pago")
+    .select("*")
+    .eq("event_slug", event.slug)
+    .maybeSingle();
+  const cerradas =
+    rowToEstadoInscripciones((config as DatosPagoRow | null) ?? null).cerradas ||
+    event.registrationForm?.closed === true;
 
   const all = (data ?? []) as InscripcionRow[];
   const stats = {
@@ -87,11 +100,25 @@ export default async function AdminPage({
               href="/admin/configuracion"
               className="rounded-brand border border-border px-4 py-2 text-sm font-medium text-muted hover:text-foreground"
             >
-              Datos de pago
+              Configuración
             </Link>
             <LogoutButton />
           </div>
         </div>
+
+        {cerradas && (
+          <p className="mb-6 rounded-brand border border-primary/50 bg-primary/10 p-4 text-sm">
+            <span className="font-semibold uppercase">
+              Inscripciones cerradas.
+            </span>{" "}
+            Nadie puede inscribirse en este momento. Las que ya están recibidas
+            se siguen verificando y acreditando con normalidad.{" "}
+            <Link href="/admin/configuracion" className="font-semibold underline">
+              Reabrir en Configuración
+            </Link>
+            .
+          </p>
+        )}
 
         <dl className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
