@@ -22,6 +22,8 @@ export interface InscripcionRow {
   correo_confirmada_at: string | null;
   correo_rechazo_at: string | null;
   asistio_at: string | null;
+  /** Evidencia LOPDP: cuándo aceptó el tratamiento de datos */
+  consentimiento_at: string | null;
 }
 
 export const ESTADO_LABELS: Record<InscripcionRow["estado"], string> = {

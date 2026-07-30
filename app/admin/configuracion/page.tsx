@@ -7,6 +7,11 @@ import { rowToDatosPago, type DatosPagoRow } from "@/lib/datos-pago";
 import { Container } from "@/components/ui/Container";
 import { DatosPagoForm } from "@/components/admin/DatosPagoForm";
 
+// Siempre por petición: depende de la sesión del admin. Sin esto, si al
+// construir faltan las variables de Supabase, Next la prerenderiza estática
+// y hornea el redirect al login.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Configuración del evento",
   robots: { index: false, follow: false },

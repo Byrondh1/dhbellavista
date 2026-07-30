@@ -155,6 +155,31 @@ Ojo: los dorsales son secuenciales *por categoría*, así que puede haber varios
 La asistencia también se ve por persona en el detalle de la inscripción
 (sección "Correos y asistencia").
 
+### Respaldo offline (imprescindible en el páramo)
+
+En El Ángel la señal falla, y la vista digital necesita conexión. Antes de
+subir:
+
+- **Imprimir lista** (`/admin/asistencia/imprimir`): lista en papel agrupada
+  por categoría, con columnas ☐ Llegó · Dorsal · Nombre (y club) · Cédula ·
+  Firma. Sale en blanco y negro a propósito, no con el tema oscuro del
+  evento: imprimirlo oscuro gastaría media tinta y quedaría ilegible. Cada
+  categoría evita partirse entre páginas y el encabezado de tabla se repite.
+- **Descargar CSV** (`/api/admin/inscripciones/export`): todas las
+  inscripciones con todos los campos útiles. Separador **punto y coma** y BOM
+  UTF-8, que es lo que Excel espera con configuración regional es-EC (con
+  coma metería todo en una columna, y sin BOM rompería los acentos). Google
+  Sheets detecta el separador solo. Si Excel lo abre en una sola columna,
+  reimporta indicando "separado por punto y coma".
+  Se omiten dos campos a propósito: `ip_hash` (hash de seguridad, inútil en
+  una hoja) y `consentimiento_texto` (el mismo párrafo en cada fila haría el
+  archivo inmanejable; queda la fecha de aceptación, que es la evidencia).
+
+Flujo del día del evento: imprimes antes de subir, acreditas en papel
+marcando las casillas, y al recuperar señal pasas las marcas al panel en
+Control de asistencia. La lista impresa lleva datos personales (cédulas):
+no la dejes sin supervisión.
+
 ### Acreditar escaneando el QR
 
 
