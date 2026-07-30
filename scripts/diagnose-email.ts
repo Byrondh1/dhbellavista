@@ -18,7 +18,7 @@ import QRCode from "qrcode";
 import { createClient } from "@supabase/supabase-js";
 import { renderInscripcionPdf } from "../lib/pdf/inscripcion-pdf";
 import { signCheckinToken, verifyCheckinToken } from "../lib/qr-token";
-import { referenciaDe } from "../lib/identificador";
+import { asignaDorsal, identificadorDe, referenciaDe } from "../lib/identificador";
 import { correoConfirmadaHtml, sendEventEmail } from "../lib/email";
 import { rowParaCorreo } from "../lib/inscripcion-emails";
 import { getSiteUrl } from "../lib/site-url";
@@ -114,7 +114,7 @@ async function main() {
   const row = data as InscripcionRow;
   ok(`Encontrada: ${row.nombre} <${row.email}>`);
   ok(
-    `estado=${row.estado} dorsal=${row.dorsal} event_slug=${row.event_slug}`,
+    `estado=${row.estado} ${identificadorDe(event).label}=${referenciaDe(event, row)?.value ?? "—"} event_slug=${row.event_slug}`,
   );
   ok(
     `correo_recibida_at=${row.correo_recibida_at ?? "null"} · correo_confirmada_at=${row.correo_confirmada_at ?? "null"}`,
@@ -142,7 +142,7 @@ async function main() {
   if (row.estado === "verificada") {
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       "verificar_inscripcion",
-      { p_id: id },
+      { p_id: id, p_con_dorsal: asignaDorsal(event) },
     );
     if (rpcError) {
       bad(`La RPC falló: ${JSON.stringify(rpcError)}`);
@@ -171,15 +171,16 @@ async function main() {
   }
 
   step("5", "Token y QR de check-in");
-  if (row.dorsal == null) {
-    bad("Sin dorsal: el PDF saldría sin QR.");
+  const referencia = referenciaDe(event, row);
+  if (!referencia) {
+    bad(`Sin ${identificadorDe(event).label.toLowerCase()}: el PDF saldría sin QR.`);
   } else if (!envs.QR_SECRET) {
     bad("Sin QR_SECRET: el PDF saldría sin QR.");
   } else {
     const token = signCheckinToken({
       id: row.id,
       slug: event.slug,
-      dorsal: row.dorsal,
+      ref: referencia.value,
     })!;
     ok(`Token firmado (${token.length} chars)`);
     ok(
@@ -197,12 +198,12 @@ async function main() {
   let pdf: Buffer;
   try {
     const qrDataUrl =
-      row.dorsal != null && envs.QR_SECRET
+      referencia && envs.QR_SECRET
         ? await QRCode.toDataURL(
             `${getSiteUrl(event)}/admin/checkin?t=${signCheckinToken({
               id: row.id,
               slug: event.slug,
-              dorsal: row.dorsal,
+              ref: referencia.value,
             })}`,
             { margin: 1, width: 480 },
           )

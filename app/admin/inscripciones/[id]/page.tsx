@@ -4,7 +4,12 @@ import { notFound, redirect } from "next/navigation";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import type { InscripcionRow } from "@/lib/inscripciones";
-import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
+import {
+  asignaDorsal,
+  identificadorDe,
+  refDe,
+  usaCategorias,
+} from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
 import { EstadoBadge } from "@/components/admin/EstadoBadge";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
@@ -218,6 +223,7 @@ export default async function InscripcionDetailPage({
             estado={row.estado}
             dorsal={row.dorsal}
             asistioAt={row.asistio_at}
+            asignaDorsal={asignaDorsal(event)}
           />
         </section>
       </Container>

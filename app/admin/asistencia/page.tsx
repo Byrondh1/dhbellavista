@@ -6,6 +6,7 @@ import { requireAdminUser } from "@/lib/supabase-admin-session";
 import type { InscripcionRow } from "@/lib/inscripciones";
 import { Container } from "@/components/ui/Container";
 import { AsistenciaToggle } from "@/components/admin/AsistenciaToggle";
+import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 
 export const metadata: Metadata = {
   title: "Control de asistencia",
@@ -30,15 +31,25 @@ export default async function AsistenciaPage({
   const { supabase, user } = await requireAdminUser();
   if (!supabase || !user) redirect("/admin/login");
 
-  const { data, error } = await supabase
+  const ident = identificadorDe(event);
+  const clasifica = usaCategorias(event);
+  const cuentaKits = event.registrationForm?.fields.copiloto === true;
+
+  const consulta = supabase
     .from("inscripciones")
     .select("*")
     .eq("event_slug", event.slug)
-    .eq("estado", "verificada")
-    // Los dorsales son secuenciales POR CATEGORÍA, así que puede haber varios
-    // "1": agrupar por categoría evita confusiones en la acreditación.
-    .order("categoria", { ascending: true })
-    .order("dorsal", { ascending: true });
+    .eq("estado", "verificada");
+  const { data, error } =
+    ident.tipo === "placa"
+      ? // La placa es única por evento y es lo que se lee del vehículo cuando
+        // llega: ordenar por ella hace la acreditación directa.
+        await consulta.order("placa", { ascending: true })
+      : // Los dorsales son secuenciales POR CATEGORÍA, así que puede haber
+        // varios "1": agrupar por categoría evita confusiones.
+        await consulta
+          .order("categoria", { ascending: true })
+          .order("dorsal", { ascending: true });
 
   if (error) {
     return (
@@ -63,6 +74,8 @@ export default async function AsistenciaPage({
     return (
       r.nombre.toLowerCase().includes(query) ||
       (r.cedula ?? "").includes(query) ||
+      (r.placa ?? "").toLowerCase().includes(query) ||
+      (r.copiloto ?? "").toLowerCase().includes(query) ||
       String(r.dorsal ?? "").includes(query)
     );
   });
@@ -70,6 +83,11 @@ export default async function AsistenciaPage({
   // Puede venir null: los eventos sin categorías (rodada) no la guardan
   const categoryName = (id: string | null) =>
     id ? (event.categories.find((c) => c.id === id)?.name ?? id) : "—";
+
+  // Kit de alimentación por vehículo: uno para el piloto y otro si hay
+  // copiloto. Es el número con el que se compra la comida.
+  const conCopiloto = verificados.filter((r) => r.copiloto).length;
+  const kits = verificados.length + conCopiloto;
 
   const porcentaje =
     verificados.length > 0
@@ -115,11 +133,18 @@ export default async function AsistenciaPage({
           </div>
         </div>
 
-        <dl className="mb-4 grid grid-cols-3 gap-3">
+        <dl
+          className={`mb-4 grid gap-3 ${
+            cuentaKits ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"
+          }`}
+        >
           {[
             { label: "Verificados", value: verificados.length, destacado: false },
             { label: "Presentes", value: presentes.length, destacado: true },
             { label: "Faltan", value: faltan, destacado: false },
+            ...(cuentaKits
+              ? [{ label: `Kits (${conCopiloto} con copiloto)`, value: kits, destacado: false }]
+              : []),
           ].map(({ label, value, destacado }) => (
             <div
               key={label}
@@ -158,7 +183,11 @@ export default async function AsistenciaPage({
           <input
             name="q"
             defaultValue={q ?? ""}
-            placeholder="Buscar por dorsal, nombre o cédula"
+            placeholder={
+              ident.tipo === "placa"
+                ? "Buscar por placa, nombre o cédula"
+                : "Buscar por dorsal, nombre o cédula"
+            }
             inputMode="search"
             className="w-full rounded-brand border border-border bg-background px-4 py-3"
           />
@@ -175,21 +204,23 @@ export default async function AsistenciaPage({
                 <option value="presentes">Solo presentes</option>
               </select>
             </label>
-            <label className="text-sm">
-              <span className="mb-1 block font-semibold">Categoría</span>
-              <select
-                name="categoria"
-                defaultValue={categoria ?? ""}
-                className="rounded-brand border border-border bg-background px-3 py-2"
-              >
-                <option value="">Todas</option>
-                {event.categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {clasifica && (
+              <label className="text-sm">
+                <span className="mb-1 block font-semibold">Categoría</span>
+                <select
+                  name="categoria"
+                  defaultValue={categoria ?? ""}
+                  className="rounded-brand border border-border bg-background px-3 py-2"
+                >
+                  <option value="">Todas</option>
+                  {event.categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <button
               type="submit"
               className="self-end rounded-brand bg-primary px-5 py-2 font-semibold uppercase tracking-wide text-primary-contrast"
@@ -219,20 +250,41 @@ export default async function AsistenciaPage({
                     : "border-border bg-surface"
                 }`}
               >
-                <span className="min-w-12 shrink-0 text-center text-2xl font-bold tabular-nums text-primary">
-                  {row.dorsal ?? "—"}
+                <span
+                  className={`shrink-0 text-center font-bold text-primary ${
+                    ident.tipo === "dorsal"
+                      ? "min-w-12 text-2xl tabular-nums"
+                      : "min-w-24 text-base tracking-wide"
+                  }`}
+                >
+                  {refDe(row, ident) ?? "—"}
                 </span>
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/admin/inscripciones/${row.id}`}
-                    className="block truncate font-semibold hover:text-primary"
+                    // Sin truncar: con la placa ocupando su ancho, en el
+                    // celular los nombres se cortaban a la mitad y hay que
+                    // poder leerlos al acreditar.
+                    className="block font-semibold leading-tight hover:text-primary"
                   >
                     {row.nombre}
                   </Link>
                   <p className="truncate text-xs text-muted">
-                    {categoryName(row.categoria)}
-                    {row.club ? ` · ${row.club}` : ""}
-                    {row.cedula ? ` · ${row.cedula}` : ""}
+                    {[
+                      clasifica ? categoryName(row.categoria) : null,
+                      // Lo que decide si se entrega un kit o dos
+                      // El kit va primero: si la línea se corta en el
+                      // celular, lo que no se puede perder es cuántos entregar
+                      cuentaKits
+                        ? row.copiloto
+                          ? `Kit 2 · ${row.copiloto}`
+                          : "Kit 1 · sin copiloto"
+                        : null,
+                      row.club,
+                      row.cedula,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                 </div>
                 <AsistenciaToggle

@@ -3,12 +3,18 @@ import { requireAdminUser } from "@/lib/supabase-admin-session";
 import type { InscripcionRow } from "@/lib/inscripciones";
 import { buildCsv, csvFecha } from "@/lib/csv";
 import { logError, logInfo } from "@/lib/logger";
+import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 
 /**
  * Export CSV de todas las inscripciones del evento, para respaldo y para
  * abrir en Excel / Google Sheets.
  *
  * Se lee con la sesión del admin (pasa por RLS), no con service role.
+ *
+ * Las columnas siguen al evento: el identificador se titula "Dorsal" o
+ * "Placa del vehículo" según el config, la categoría no aparece en eventos
+ * que no clasifican, y el copiloto (con el que se cuentan los kits) solo en
+ * los que lo piden.
  *
  * Dos campos se omiten a propósito: `ip_hash` (es un hash, no aporta nada en
  * una hoja de cálculo, y es dato de seguridad) y `consentimiento_texto` (el
@@ -26,13 +32,23 @@ export async function GET() {
     return new Response("No autorizado.", { status: 401 });
   }
 
-  const { data, error } = await supabase
+  const ident = identificadorDe(event);
+  const clasifica = usaCategorias(event);
+  const cuentaKits = event.registrationForm?.fields.copiloto === true;
+
+  const consulta = supabase
     .from("inscripciones")
     .select("*")
-    .eq("event_slug", event.slug)
-    .order("categoria", { ascending: true })
-    .order("dorsal", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
+    .eq("event_slug", event.slug);
+  const { data, error } =
+    ident.tipo === "placa"
+      ? await consulta
+          .order("placa", { ascending: true, nullsFirst: false })
+          .order("created_at", { ascending: true })
+      : await consulta
+          .order("categoria", { ascending: true })
+          .order("dorsal", { ascending: true, nullsFirst: false })
+          .order("created_at", { ascending: true });
 
   if (error) {
     logError(`Export CSV de ${event.slug} falló`, error);
@@ -45,10 +61,11 @@ export async function GET() {
 
   const csv = buildCsv(
     [
-      "Dorsal",
+      ident.label,
       "Nombre",
       "Cédula",
-      "Categoría",
+      ...(clasifica ? ["Categoría"] : []),
+      ...(cuentaKits ? ["Copiloto", "Kits"] : []),
       "Estado",
       "Presente",
       "Hora de llegada",
@@ -70,10 +87,12 @@ export async function GET() {
       "ID",
     ],
     filas.map((r) => [
-      r.dorsal ?? "",
+      refDe(r, ident) ?? "",
       r.nombre,
       r.cedula ?? "",
-      r.categoria ? nombreCategoria(r.categoria) : "",
+      ...(clasifica ? [r.categoria ? nombreCategoria(r.categoria) : ""] : []),
+      // "Kits" numérico para poder sumar la columna en la hoja
+      ...(cuentaKits ? [r.copiloto ?? "", r.copiloto ? "2" : "1"] : []),
       r.estado,
       r.asistio_at ? "Sí" : "No",
       csvFecha(r.asistio_at),

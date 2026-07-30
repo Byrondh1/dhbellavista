@@ -6,6 +6,7 @@ import { requireAdminUser } from "@/lib/supabase-admin-session";
 import { ESTADO_LABELS, type InscripcionRow } from "@/lib/inscripciones";
 import type { DatosPagoRow } from "@/lib/datos-pago";
 import { rowToEstadoInscripciones } from "@/lib/estado-inscripciones";
+import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { EstadoBadge } from "@/components/admin/EstadoBadge";
@@ -73,12 +74,16 @@ export default async function AdminPage({
       (!categoria || r.categoria === categoria) &&
       (!query ||
         r.nombre.toLowerCase().includes(query) ||
-        (r.cedula ?? "").includes(query)),
+        (r.cedula ?? "").includes(query) ||
+        (r.placa ?? "").toLowerCase().includes(query)),
   );
 
   // Puede venir null: los eventos sin categorías (rodada) no la guardan
   const categoryName = (id: string | null) =>
     id ? (event.categories.find((c) => c.id === id)?.name ?? id) : "—";
+
+  const ident = identificadorDe(event);
+  const clasifica = usaCategorias(event);
 
   return (
     <main className="flex-1 py-10">
@@ -159,27 +164,31 @@ export default async function AdminPage({
               ))}
             </select>
           </label>
-          <label className="text-sm">
-            <span className="mb-1 block font-semibold">Categoría</span>
-            <select
-              name="categoria"
-              defaultValue={categoria ?? ""}
-              className="rounded-brand border border-border bg-background px-3 py-2"
-            >
-              <option value="">Todas</option>
-              {event.categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {clasifica && (
+            <label className="text-sm">
+              <span className="mb-1 block font-semibold">Categoría</span>
+              <select
+                name="categoria"
+                defaultValue={categoria ?? ""}
+                className="rounded-brand border border-border bg-background px-3 py-2"
+              >
+                <option value="">Todas</option>
+                {event.categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="flex-1 text-sm">
             <span className="mb-1 block font-semibold">Buscar</span>
             <input
               name="q"
               defaultValue={q ?? ""}
-              placeholder="Nombre o cédula"
+              placeholder={
+                ident.tipo === "placa" ? "Nombre, cédula o placa" : "Nombre o cédula"
+              }
               className="w-full min-w-40 rounded-brand border border-border bg-background px-3 py-2"
             />
           </label>
@@ -201,11 +210,11 @@ export default async function AdminPage({
               <thead className="bg-surface text-xs uppercase tracking-wider text-muted">
                 <tr>
                   <th className="p-3">Nombre</th>
-                  <th className="p-3">Categoría</th>
+                  {clasifica && <th className="p-3">Categoría</th>}
                   <th className="p-3">Ciudad</th>
                   <th className="p-3">Teléfono</th>
                   <th className="p-3">Estado</th>
-                  <th className="p-3">Dorsal</th>
+                  <th className="p-3">{ident.label}</th>
                   <th className="p-3">Fecha</th>
                   <th className="p-3"></th>
                 </tr>
@@ -214,14 +223,16 @@ export default async function AdminPage({
                 {rows.map((row) => (
                   <tr key={row.id} className="border-t border-border">
                     <td className="p-3 font-medium">{row.nombre}</td>
-                    <td className="p-3">{categoryName(row.categoria)}</td>
+                    {clasifica && (
+                      <td className="p-3">{categoryName(row.categoria)}</td>
+                    )}
                     <td className="p-3 text-muted">{row.ciudad ?? "—"}</td>
                     <td className="p-3 text-muted">{row.telefono}</td>
                     <td className="p-3">
                       <EstadoBadge estado={row.estado} />
                     </td>
                     <td className="p-3 font-bold text-primary">
-                      {row.dorsal ?? "—"}
+                      {refDe(row, ident) ?? "—"}
                     </td>
                     <td className="p-3 text-muted">
                       {new Date(row.created_at).toLocaleDateString("es-EC", {

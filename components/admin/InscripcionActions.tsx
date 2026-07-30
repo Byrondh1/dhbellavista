@@ -15,11 +15,14 @@ export function InscripcionActions({
   estado,
   dorsal,
   asistioAt,
+  /** true si el evento numera al verificar (dorsal); false si va por placa */
+  asignaDorsal,
 }: {
   id: string;
   estado: string;
   dorsal: number | null;
   asistioAt: string | null;
+  asignaDorsal: boolean;
 }) {
   const router = useRouter();
   const [motivo, setMotivo] = useState("");
@@ -61,8 +64,12 @@ export function InscripcionActions({
 
   if (estado === "verificada") {
     const advertencias = [
-      `Se liberará el dorsal ${dorsal ?? "asignado"} y la inscripción volverá a estado pendiente.`,
-      "El participante ya tiene un PDF con ese dorsal que dejará de ser válido (su QR mostrará \"inscripción no vigente\"). Avísale tú si hace falta: revertir no envía ningún correo.",
+      // En los eventos por placa no hay dorsal que liberar: prometerlo
+      // confundiría a quien lee el aviso.
+      asignaDorsal
+        ? `Se liberará el dorsal ${dorsal ?? "asignado"} y la inscripción volverá a estado pendiente.`
+        : "La inscripción volverá a estado pendiente.",
+      "El participante ya tiene un PDF que dejará de ser válido (su QR mostrará \"inscripción no vigente\"). Avísale tú si hace falta: revertir no envía ningún correo.",
       ...(asistioAt
         ? ["⚠ SE BORRARÁ su registro de check-in (ya estaba marcado como presente)."]
         : []),
@@ -74,8 +81,9 @@ export function InscripcionActions({
       <div className="space-y-4">
         <p className="text-sm text-muted">
           Inscripción verificada. Si la verificaste por error, puedes
-          revertirla: vuelve a pendiente y podrás verificarla de nuevo (con un
-          dorsal nuevo) o rechazarla con un motivo.
+          revertirla: vuelve a pendiente y podrás verificarla de nuevo
+          {asignaDorsal ? " (con un dorsal nuevo)" : ""} o rechazarla con un
+          motivo.
         </p>
         <button
           type="button"
@@ -103,7 +111,10 @@ export function InscripcionActions({
           type="button"
           disabled={busy}
           onClick={() => {
-            if (window.confirm("¿Verificar el pago y asignar dorsal?")) {
+            const pregunta = asignaDorsal
+              ? "¿Verificar el pago y asignar dorsal?"
+              : "¿Verificar el pago?";
+            if (window.confirm(pregunta)) {
               act("verificar");
             }
           }}

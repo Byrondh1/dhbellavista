@@ -9,7 +9,7 @@ import {
   type EmailResult,
 } from "./email";
 import { renderInscripcionPdf, type PdfInscripcion } from "./pdf/inscripcion-pdf";
-import { referenciaDe } from "./identificador";
+import { identificadorDe, referenciaDe } from "./identificador";
 import { signCheckinToken } from "./qr-token";
 import { getSiteUrl } from "./site-url";
 import { describeError, logError, logInfo, logWarn } from "./logger";
@@ -97,16 +97,16 @@ export async function enviarCorreoConfirmada(
   // El QR es deseable pero no bloqueante: su fallo no debe impedir el correo
   let qrDataUrl: string | undefined;
   try {
-    if (inscripcion.dorsal == null) {
+    if (!referencia) {
       logWarn(
-        `Correo 2 (${inscripcion.id}): el token del QR todavía se firma solo con dorsal, ` +
-          `así que en eventos identificados por placa el PDF sale sin QR de check-in.`,
+        `Correo 2 (${inscripcion.id}): sin identificador (${identificadorDe(event).label}), ` +
+          `el PDF sale sin QR de check-in.`,
       );
     } else {
       const token = signCheckinToken({
         id: inscripcion.id,
         slug: event.slug,
-        dorsal: inscripcion.dorsal,
+        ref: referencia.value,
       });
       if (!token) {
         logWarn(

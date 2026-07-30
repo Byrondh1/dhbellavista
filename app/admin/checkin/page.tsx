@@ -5,6 +5,7 @@ import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import { verifyCheckinToken } from "@/lib/qr-token";
 import type { InscripcionRow } from "@/lib/inscripciones";
+import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
 import { EstadoBadge } from "@/components/admin/EstadoBadge";
 import { CheckinButton } from "@/components/admin/CheckinButton";
@@ -56,7 +57,9 @@ export default async function CheckinPage({
   const row = data as InscripcionRow | null;
 
   // La firma era válida pero los datos deben coincidir con la base
-  if (!row || row.dorsal !== payload.dorsal || row.estado !== "verificada") {
+  const ident = identificadorDe(event);
+  const referencia = row ? refDe(row, ident) : null;
+  if (!row || referencia !== payload.ref || row.estado !== "verificada") {
     return (
       <Shell>
         <div className="rounded-brand border-2 border-primary bg-surface p-8 text-center">
@@ -64,8 +67,8 @@ export default async function CheckinPage({
             Inscripción no vigente
           </p>
           <p className="mt-3 text-muted">
-            El QR es auténtico pero la inscripción ya no está verificada o el
-            dorsal cambió. Revisa el caso en el panel.
+            El QR es auténtico pero la inscripción ya no está verificada o su{" "}
+            {ident.label.toLowerCase()} cambió. Revisa el caso en el panel.
           </p>
           <Link
             href={row ? `/admin/inscripciones/${row.id}` : "/admin"}
@@ -79,19 +82,53 @@ export default async function CheckinPage({
   }
 
   const categoryName =
-    event.categories.find((c) => c.id === row.categoria)?.name ?? row.categoria;
+    usaCategorias(event) && row.categoria
+      ? (event.categories.find((c) => c.id === row.categoria)?.name ??
+        row.categoria)
+      : null;
 
   return (
     <Shell>
       <div className="rounded-brand border border-border bg-surface p-8 text-center">
         <EstadoBadge estado={row.estado} />
-        <p className="mt-6 text-5xl font-bold text-primary">#{row.dorsal}</p>
-        <h1 className="mt-2 text-2xl font-bold uppercase">{row.nombre}</h1>
-        <p className="mt-1 text-muted">
-          {categoryName}
-          {row.club ? ` · ${row.club}` : ""}
-          {row.cedula ? ` · CI ${row.cedula}` : ""}
+        {/* El identificador manda: dorsal en el downhill, placa en la rodada.
+            Las placas son largas, así que bajan de tamaño para no partirse. */}
+        <p
+          className={`mt-6 font-bold text-primary ${
+            ident.tipo === "dorsal" ? "text-5xl" : "text-4xl tracking-wide"
+          }`}
+        >
+          {ident.tipo === "dorsal" ? `#${referencia}` : referencia}
         </p>
+        <p className="text-xs uppercase tracking-widest text-muted">
+          {ident.label}
+        </p>
+        <h1 className="mt-3 text-2xl font-bold uppercase">{row.nombre}</h1>
+        <p className="mt-1 text-muted">
+          {[
+            categoryName,
+            row.club,
+            row.cedula ? `CI ${row.cedula}` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+        {/* En la rodada el kit de alimentación es por ocupantes del vehículo */}
+        {event.registrationForm?.fields.copiloto && (
+          <p className="mt-3 rounded-brand border border-border bg-background px-3 py-2 text-sm">
+            {row.copiloto ? (
+              <>
+                Copiloto: <span className="font-semibold">{row.copiloto}</span> ·{" "}
+                <span className="font-semibold text-primary">Kit para 2</span>
+              </>
+            ) : (
+              <>
+                Sin copiloto ·{" "}
+                <span className="font-semibold text-primary">Kit para 1</span>
+              </>
+            )}
+          </p>
+        )}
 
         <div className="mt-8">
           <CheckinButton id={row.id} asistioAt={row.asistio_at} />

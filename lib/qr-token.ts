@@ -3,14 +3,19 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 /**
  * Token firmado del QR de check-in: `base64url(payload).base64url(hmac)`.
  * La firma HMAC-SHA256 con QR_SECRET hace el QR infalsificable: cualquier
- * alteración del id, evento o dorsal invalida el token. Solo servidor.
+ * alteración del id, evento o identificador invalida el token. Solo servidor.
  */
 export interface CheckinPayload {
   /** id de la inscripción */
   id: string;
   /** event_slug */
   slug: string;
-  dorsal: number;
+  /**
+   * Identificador del evento ya como texto: "7" (dorsal) o "PCX-1234"
+   * (placa). Texto y no número para que sirva a cualquier tipo de evento
+   * (ver lib/identificador.ts).
+   */
+  ref: string;
 }
 
 function hmac(payload: string, secret: string): Buffer {
@@ -49,12 +54,18 @@ export function verifyCheckinToken(token: string): CheckinPayload | null {
     const payload = JSON.parse(
       Buffer.from(encoded, "base64url").toString("utf8"),
     );
-    if (
-      typeof payload?.id === "string" &&
-      typeof payload?.slug === "string" &&
-      typeof payload?.dorsal === "number"
-    ) {
+    if (typeof payload?.id !== "string" || typeof payload?.slug !== "string") {
+      return null;
+    }
+    if (typeof payload.ref === "string") {
       return payload as CheckinPayload;
+    }
+    // Compatibilidad con los tokens emitidos antes de que el identificador
+    // fuera texto: llevaban `dorsal` numérico. Firmados con el mismo secreto,
+    // así que siguen siendo auténticos — no hay razón para invalidar PDFs ya
+    // enviados.
+    if (typeof payload.dorsal === "number") {
+      return { id: payload.id, slug: payload.slug, ref: String(payload.dorsal) };
     }
     return null;
   } catch {

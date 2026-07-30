@@ -6,6 +6,7 @@
  *
  * Uso: QR_SECRET=... npx tsx --tsconfig scripts/tsconfig.preview.json scripts/verify-qr.ts <dir-salida>
  */
+import { createHmac } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import QRCode from "qrcode";
@@ -25,7 +26,7 @@ async function main() {
   const payload = {
     id: "a1b2c3d4-0000-0000-0000-000000000000",
     slug: "downhill-la-cantera-2026",
-    dorsal: 7,
+    ref: "7",
   };
   const token = signCheckinToken(payload)!;
   const verified = verifyCheckinToken(token);
@@ -37,7 +38,7 @@ async function main() {
   // Token alterado (dorsal 7 → intento de cambiarlo) debe rechazarse
   const [encoded] = token.split(".");
   const tampered = Buffer.from(
-    JSON.stringify({ ...payload, dorsal: 99 }),
+    JSON.stringify({ ...payload, ref: "99" }),
   ).toString("base64url");
   console.log(
     "payload alterado con firma vieja:",
@@ -65,7 +66,33 @@ async function main() {
   const tokenDelQr = new URL(decoded!.data).searchParams.get("t")!;
   console.log(
     "token extraído del QR verifica:",
-    verifyCheckinToken(tokenDelQr)?.dorsal === 7 ? "OK" : "FALLO",
+    verifyCheckinToken(tokenDelQr)?.ref === "7" ? "OK" : "FALLO",
+  );
+
+  // Identificador de texto (placa): el mismo mecanismo sirve sin cambios
+  const tokenPlaca = signCheckinToken({
+    id: payload.id,
+    slug: "rodada-angelena-4x4-2026",
+    ref: "PCX-1234",
+  })!;
+  console.log(
+    "token por placa:",
+    verifyCheckinToken(tokenPlaca)?.ref === "PCX-1234" ? "OK" : "FALLO",
+  );
+
+  // Tokens viejos (dorsal numérico) firmados con el mismo secreto: los PDFs
+  // ya enviados deben seguir sirviendo
+  const legacyEncoded = Buffer.from(
+    JSON.stringify({ id: payload.id, slug: payload.slug, dorsal: 7 }),
+  ).toString("base64url");
+  const legacyHmac = createHmac("sha256", process.env.QR_SECRET!)
+    .update(legacyEncoded)
+    .digest("base64url");
+  console.log(
+    "token con formato viejo (dorsal numérico):",
+    verifyCheckinToken(`${legacyEncoded}.${legacyHmac}`)?.ref === "7"
+      ? "ACEPTADO (correcto)"
+      : "RECHAZADO (¡FALLO!)",
   );
 
   // 3. PDF definitivo con QR para revisión visual

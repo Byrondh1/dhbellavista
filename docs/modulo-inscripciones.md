@@ -29,10 +29,10 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
   (migración 0008), con campo de copiloto para el conteo de kits. Formulario,
   endpoint, PDFs y los dos correos ya respetan el identificador de cada
   evento.
-- **Rodada R2 — PENDIENTE**: firmar el QR con el identificador de texto
-  (hoy el token solo lleva dorsal, así que un evento por placa emite el PDF
-  definitivo **sin QR**), pantalla de check-in por placa, y panel/asistencia/
-  lista imprimible/CSV sin categorías y ordenados por placa.
+- **Rodada R2 — HECHO**: QR firmado con el identificador como texto (sirve
+  igual para dorsal y para placa, y acepta los tokens viejos), check-in que
+  muestra la placa, y panel, acreditación, lista imprimible y CSV adaptados
+  al evento. **El módulo está completo para los dos eventos.**
 
 > ⚠ El motivo del rechazo que se escribe en el panel **se le envía tal cual
 > al participante**. Redáctalo como un mensaje para él, no como nota
@@ -99,6 +99,32 @@ registrationForm: {
 - Los textos que prometían un dorsal (Correo 1 y nota del PDF provisional)
   cambian de redacción según el tipo de identificador: a quien se inscribe con
   placa no se le promete un número que nunca va a recibir.
+
+### Qué cambia en el panel según el evento
+
+| | Downhill (dorsal) | Rodada (placa) |
+|---|---|---|
+| Lista y detalle | columna "Dorsal" | columna "Placa del vehículo" |
+| Filtro de categoría | sí | oculto |
+| Búsqueda | nombre, cédula | nombre, cédula, **placa**, copiloto |
+| Acreditación | agrupada por categoría, ordenada por dorsal | una sola lista **ordenada por placa** |
+| Contadores | verificados / presentes / faltan | + **kits** (inscritos + copilotos) |
+| Lista imprimible | una tabla por categoría | una sola tabla, con el copiloto y el kit por fila |
+| CSV | Dorsal, Categoría | Placa, Copiloto y **Kits** (1 o 2, sumable en la hoja) |
+| Al verificar | asigna dorsal | solo confirma |
+
+**QR de check-in**: el token firma `{ id, slug, ref }`, donde `ref` es el
+identificador ya como texto (`"7"` o `"PCX-1234"`). Al escanear, la página
+contrasta ese `ref` contra la base: si la inscripción dejó de estar verificada
+o cambió de placa, muestra "Inscripción no vigente". Los tokens emitidos antes
+de este cambio (con `dorsal` numérico) **se siguen aceptando** — están
+firmados con el mismo secreto y no hay razón para invalidar PDFs ya enviados.
+
+**Kits de alimentación** (eventos con campo de copiloto): un kit por piloto y
+otro si el vehículo lleva copiloto. El total sale en la vista de acreditación
+y en la cabecera de la lista impresa; en el CSV la columna "Kits" es numérica
+para poder sumarla. En la pantalla de check-in aparece "Kit para 1 / Kit para
+2" al escanear, que es el momento en que se entrega.
 
 ## Abrir y cerrar inscripciones
 
