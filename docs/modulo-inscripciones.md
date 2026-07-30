@@ -133,7 +133,31 @@ Dos comportamientos a tener en cuenta:
 Tope del plan gratuito de Resend: 100 correos/día. Si se agota en un pico de
 inscripciones, los correos no enviados se recuperan con el botón de reenviar.
 
-## Check-in del día del evento
+## Check-in y control de asistencia (día del evento)
+
+**Vista de acreditación: `/admin/asistencia`** (botón "Control de asistencia"
+en el panel). Es la pantalla para usar el día de la carrera, pensada para el
+celular:
+
+- Contadores arriba: **verificados**, **presentes** y **faltan**, con barra
+  de avance.
+- Búsqueda por dorsal, nombre o cédula, y filtros "solo los que faltan" /
+  "solo presentes" / por categoría.
+- Lista agrupada por categoría y ordenada por dorsal, con un botón grande por
+  persona: **Marcar** si no ha llegado, o **✓ hora** si ya está presente
+  (tocarlo de nuevo deshace el check-in, con confirmación, para corregir un
+  escaneo equivocado).
+
+Solo aparecen las inscripciones **verificadas**: son las únicas con dorsal.
+Ojo: los dorsales son secuenciales *por categoría*, así que puede haber varios
+"1" — por eso la lista se agrupa por categoría.
+
+La asistencia también se ve por persona en el detalle de la inscripción
+(sección "Correos y asistencia").
+
+### Acreditar escaneando el QR
+
+
 
 El QR del PDF definitivo apunta a `<sitio>/admin/checkin?t=<token>`, donde el
 token lleva id + evento + dorsal firmados con HMAC-SHA256. Al escanearlo con

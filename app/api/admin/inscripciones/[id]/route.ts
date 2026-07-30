@@ -20,6 +20,7 @@ const actionSchema = z.object({
     "rechazar",
     "reenviar-correo",
     "checkin",
+    "deshacer-checkin",
   ]),
   motivo: z.string().trim().max(300).optional(),
 });
@@ -329,6 +330,21 @@ export async function POST(
           yaPresente: false,
           asistio_at: (updated as InscripcionRow).asistio_at,
         });
+      }
+
+      case "deshacer-checkin": {
+        // Para corregir un escaneo equivocado en la acreditación
+        if (!row.asistio_at) {
+          return NextResponse.json({ ok: true, asistio_at: null });
+        }
+        const { error } = await supabase
+          .from("inscripciones")
+          .update({ asistio_at: null })
+          .eq("id", id)
+          .eq("event_slug", event.slug);
+        if (error) throw error;
+        logInfo(`Check-in deshecho para ${id} (dorsal ${row.dorsal})`);
+        return NextResponse.json({ ok: true, asistio_at: null });
       }
     }
   } catch (error) {
