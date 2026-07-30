@@ -8,17 +8,21 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import type { EventConfig } from "@/lib/types";
+import { identificadorDe, referenciaDe, usaCategorias } from "@/lib/identificador";
 
 /** Datos del inscrito que aparecen en el PDF (subset serializable) */
 export interface PdfInscripcion {
   id: string;
   nombre: string;
   cedula?: string | null;
-  categoria: string;
+  /** null en eventos que no clasifican */
+  categoria?: string | null;
   ciudad?: string | null;
   telefono: string;
   club?: string | null;
   dorsal?: number | null;
+  placa?: string | null;
+  copiloto?: string | null;
   created_at: string;
 }
 
@@ -29,7 +33,8 @@ export type PdfVariant = "provisional" | "definitivo";
  * config (banda de color primario; cuerpo en negro sobre blanco para que
  * imprima bien). Variantes:
  * - provisional: sello "PENDIENTE DE VERIFICACIÓN" (Correo 1)
- * - definitivo: dorsal gigante + QR de check-in (Correo 2, sub-fase D2)
+ * - definitivo: identificador en grande (dorsal o placa, según el config del
+ *   evento) + QR de check-in (Correo 2)
  */
 export async function renderInscripcionPdf(
   event: EventConfig,
@@ -96,6 +101,12 @@ export async function renderInscripcionPdf(
       fontFamily: "Helvetica-Bold",
       color: primary,
     },
+    /** Variante para identificadores de texto (placa): más chico y monoespaciado */
+    placa: {
+      fontSize: 32,
+      fontFamily: "Courier-Bold",
+      letterSpacing: 1,
+    },
     qr: { width: 120, height: 120 },
     note: { marginTop: 20, fontSize: 9, color: "#666", lineHeight: 1.5 },
     footer: {
@@ -113,18 +124,31 @@ export async function renderInscripcionPdf(
     },
   });
 
-  const categoryName =
-    event.categories.find((c) => c.id === inscripcion.categoria)?.name ??
-    inscripcion.categoria;
+  const ident = identificadorDe(event);
+  const referencia = referenciaDe(event, inscripcion);
 
+  const categoryName = inscripcion.categoria
+    ? (event.categories.find((c) => c.id === inscripcion.categoria)?.name ??
+      inscripcion.categoria)
+    : null;
+
+  const fila = (label: string, value: string): [string, string] => [label, value];
   const fields: [string, string][] = [
-    ["Nombre", inscripcion.nombre],
-    ...(inscripcion.cedula ? [["Cédula", inscripcion.cedula] as [string, string]] : []),
-    ["Categoría", categoryName],
-    ...(inscripcion.ciudad ? [["Ciudad", inscripcion.ciudad] as [string, string]] : []),
-    ["Teléfono", inscripcion.telefono],
-    ...(inscripcion.club ? [["Club / equipo", inscripcion.club] as [string, string]] : []),
-    ["Evento", `${event.date.displayLabel} — ${event.location.venue}, ${event.location.city}`],
+    fila("Nombre", inscripcion.nombre),
+    ...(inscripcion.cedula ? [fila("Cédula", inscripcion.cedula)] : []),
+    // Solo en eventos que clasifican: si no, no queda una fila con guión
+    ...(usaCategorias(event) && categoryName
+      ? [fila("Categoría", categoryName)]
+      : []),
+    ...(inscripcion.ciudad ? [fila("Ciudad", inscripcion.ciudad)] : []),
+    ...(inscripcion.placa ? [fila(ident.label, inscripcion.placa)] : []),
+    ...(inscripcion.copiloto ? [fila("Copiloto", inscripcion.copiloto)] : []),
+    fila("Teléfono", inscripcion.telefono),
+    ...(inscripcion.club ? [fila("Club / equipo", inscripcion.club)] : []),
+    fila(
+      "Evento",
+      `${event.date.displayLabel} — ${event.location.venue}, ${event.location.city}`,
+    ),
   ];
 
   const doc = (
@@ -156,10 +180,16 @@ export async function renderInscripcionPdf(
             <View style={styles.dorsalBlock}>
               <View>
                 <Text style={{ fontSize: 8, color: "#666", textTransform: "uppercase", letterSpacing: 1 }}>
-                  Dorsal
+                  {ident.label}
                 </Text>
-                <Text style={styles.dorsal}>
-                  {inscripcion.dorsal ?? "—"}
+                <Text
+                  style={[
+                    styles.dorsal,
+                    // Una placa tiene 7–8 caracteres: a 64 pt se sale del A5
+                    ident.tipo === "placa" ? styles.placa : {},
+                  ]}
+                >
+                  {referencia?.value ?? "—"}
                 </Text>
               </View>
               {qrDataUrl && (
@@ -171,7 +201,12 @@ export async function renderInscripcionPdf(
 
           <Text style={styles.note}>
             {variant === "provisional"
-              ? "Este documento no confirma tu cupo. Cuando la organización verifique tu pago recibirás por correo tu inscripción definitiva con dorsal y código QR."
+              ? // No prometer un dorsal a quien se identifica por placa
+                `Este documento no confirma tu cupo. Cuando la organización verifique tu pago recibirás por correo tu inscripción definitiva ${
+                  ident.tipo === "dorsal"
+                    ? "con dorsal y código QR"
+                    : "con el código QR de acreditación"
+                }.`
               : "Presenta este documento (impreso o en tu celular) en la acreditación del evento. El código QR es personal e intransferible."}
           </Text>
         </View>

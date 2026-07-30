@@ -25,6 +25,14 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
 - **Operación sin redesplegar — HECHO**: datos de pago (migración 0006) y
   apertura/cierre de inscripciones con mensaje de cierre (migración 0007) se
   editan desde `/admin/configuracion`.
+- **Rodada R1 — HECHO**: eventos sin categorías y identificados por placa
+  (migración 0008), con campo de copiloto para el conteo de kits. Formulario,
+  endpoint, PDFs y los dos correos ya respetan el identificador de cada
+  evento.
+- **Rodada R2 — PENDIENTE**: firmar el QR con el identificador de texto
+  (hoy el token solo lleva dorsal, así que un evento por placa emite el PDF
+  definitivo **sin QR**), pantalla de check-in por placa, y panel/asistencia/
+  lista imprimible/CSV sin categorías y ordenados por placa.
 
 > ⚠ El motivo del rechazo que se escribe en el panel **se le envía tal cual
 > al participante**. Redáctalo como un mensaje para él, no como nota
@@ -51,6 +59,46 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
 
 Si Supabase no está configurado y el modo es `"modal"`, el endpoint responde
 503 con un mensaje que redirige a WhatsApp — el sitio no se rompe.
+
+## Cada evento identifica a los suyos a su manera
+
+No todos los eventos tienen dorsal ni categorías. Eso se declara en el config
+y **lo resuelve un solo archivo**, `lib/identificador.ts`: el PDF, los correos,
+el QR, el panel y la acreditación preguntan ahí en vez de leer `dorsal` o
+`placa` por su cuenta.
+
+```ts
+registrationForm: {
+  fields: { …, categoria: false, placa: true, copiloto: true },
+  identificador: { tipo: "placa", label: "Placa del vehículo" },
+}
+```
+
+| | Downhill La Cantera | Rodada Angeleña 4x4 |
+|---|---|---|
+| Identificador | **Dorsal**, secuencial por categoría, lo asigna el sistema al verificar | **Placa del vehículo**, la trae el participante al inscribirse |
+| Categorías | Sí (select obligatorio en el formulario) | No (las "modalidades" de la sección pública son informativas) |
+| Campos propios | — | Placa (obligatoria) y copiloto (opcional) |
+
+- `identificador.tipo: "placa"` implica que **verificar no numera nada**: el
+  endpoint llama a `verificar_inscripcion(id, p_con_dorsal => false)`.
+- La **placa es única por evento** (índice parcial de la migración 0008): un
+  vehículo, una inscripción. Si alguien repite, el endpoint responde 409 con
+  "ese vehículo ya está inscrito" en lugar del error crudo de Postgres.
+- Se guarda **normalizada** (mayúsculas, sin espacios ni puntos) y se valida
+  permisivamente: 5–10 alfanuméricos con al menos una letra y un número, así
+  entran las ecuatorianas (PCX-1234), las colombianas (ABC123) y las de moto
+  (ABC12D). Ipiales está a 40 km: rebotar una placa válida cuesta más que
+  aceptar una rara.
+- **Copiloto lleno = kit de alimentación para dos.** Es el dato con el que se
+  calcula la comida; aparece en el PDF del participante y en el panel, que
+  dice explícitamente "Sin copiloto (kit para 1)" cuando está vacío.
+- Los eventos sin categorías guardan `categoria` en **null** (la columna dejó
+  de ser obligatoria en la 0008) y el PDF, el panel y el CSV omiten el campo
+  en lugar de mostrar un guión.
+- Los textos que prometían un dorsal (Correo 1 y nota del PDF provisional)
+  cambian de redacción según el tipo de identificador: a quien se inscribe con
+  placa no se le promete un número que nunca va a recibir.
 
 ## Abrir y cerrar inscripciones
 

@@ -120,7 +120,13 @@ export async function POST(request: Request) {
   const parsed = buildRegistrationSchema(event).safeParse({
     nombre: data.get("nombre") ?? undefined,
     email: data.get("email") ?? undefined,
-    categoria: data.get("categoria") ?? undefined,
+    categoria: form.fields.categoria
+      ? (data.get("categoria") ?? undefined)
+      : undefined,
+    placa: form.fields.placa ? (data.get("placa") ?? undefined) : undefined,
+    copiloto: form.fields.copiloto
+      ? (data.get("copiloto") ?? undefined)
+      : undefined,
     telefono: data.get("telefono") ?? undefined,
     cedula: form.fields.cedula ? (data.get("cedula") ?? undefined) : undefined,
     ciudad: form.fields.ciudad ? (data.get("ciudad") ?? undefined) : undefined,
@@ -193,9 +199,11 @@ export async function POST(request: Request) {
         nombre: input.nombre,
         email: input.email,
         cedula: input.cedula ?? null,
-        categoria: input.categoria,
+        categoria: input.categoria ?? null,
         ciudad: input.ciudad ?? null,
         telefono: input.telefono,
+        placa: input.placa ?? null,
+        copiloto: input.copiloto || null,
         emergencia_nombre: input.emergenciaNombre ?? null,
         emergencia_telefono: input.emergenciaTelefono ?? null,
         club: input.club || null,
@@ -208,8 +216,15 @@ export async function POST(request: Request) {
 
     if (insertError) {
       if (insertError.code === "23505") {
+        // Dos índices únicos por evento: cédula (una inscripción por persona)
+        // y placa (una por vehículo). El mensaje tiene que decir cuál chocó.
+        const detalle = `${insertError.message} ${insertError.details ?? ""}`;
         return NextResponse.json(
-          { error: "Ya existe una inscripción con esa cédula para este evento." },
+          {
+            error: detalle.includes("placa")
+              ? "Ese vehículo ya está inscrito en este evento. Si crees que es un error, escríbenos por WhatsApp."
+              : "Ya existe una inscripción con esa cédula para este evento.",
+          },
           { status: 409 },
         );
       }
@@ -246,9 +261,12 @@ export async function POST(request: Request) {
       nombre: input.nombre,
       email: input.email,
       cedula: input.cedula ?? null,
-      categoria: input.categoria,
+      categoria: input.categoria ?? null,
       ciudad: input.ciudad ?? null,
       telefono: input.telefono,
+      // Sin esto el PDF provisional de la rodada saldría sin su identificador
+      placa: input.placa ?? null,
+      copiloto: input.copiloto || null,
       club: input.club || null,
       created_at: new Date().toISOString(),
     });

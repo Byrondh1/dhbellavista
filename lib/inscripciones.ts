@@ -5,9 +5,14 @@ export interface InscripcionRow {
   nombre: string;
   email: string;
   cedula: string | null;
-  categoria: string;
+  /** null en eventos que no clasifican (ver registrationForm.fields.categoria) */
+  categoria: string | null;
   ciudad: string | null;
   telefono: string;
+  /** Identificador de los eventos por placa (rodada); null en el downhill */
+  placa: string | null;
+  /** Lleno = el vehículo va con dos personas (kit de alimentación para 2) */
+  copiloto: string | null;
   emergencia_nombre: string | null;
   emergencia_telefono: string | null;
   club: string | null;

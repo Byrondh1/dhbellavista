@@ -67,8 +67,9 @@ export default async function AsistenciaPage({
     );
   });
 
-  const categoryName = (id: string) =>
-    event.categories.find((c) => c.id === id)?.name ?? id;
+  // Puede venir null: los eventos sin categorías (rodada) no la guardan
+  const categoryName = (id: string | null) =>
+    id ? (event.categories.find((c) => c.id === id)?.name ?? id) : "—";
 
   const porcentaje =
     verificados.length > 0

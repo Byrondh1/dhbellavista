@@ -18,6 +18,7 @@ import QRCode from "qrcode";
 import { createClient } from "@supabase/supabase-js";
 import { renderInscripcionPdf } from "../lib/pdf/inscripcion-pdf";
 import { signCheckinToken, verifyCheckinToken } from "../lib/qr-token";
+import { referenciaDe } from "../lib/identificador";
 import { correoConfirmadaHtml, sendEventEmail } from "../lib/email";
 import { rowParaCorreo } from "../lib/inscripcion-emails";
 import { getSiteUrl } from "../lib/site-url";
@@ -224,7 +225,7 @@ async function main() {
       event,
       to: row.email,
       subject: `¡Inscripción confirmada! — ${event.name}`,
-      html: correoConfirmadaHtml(event, row.nombre, row.dorsal),
+      html: correoConfirmadaHtml(event, row.nombre, referenciaDe(event, row)),
       attachments: [{ filename: "inscripcion-definitiva.pdf", content: pdf }],
     });
     console.log(

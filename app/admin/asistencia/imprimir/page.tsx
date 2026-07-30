@@ -59,7 +59,10 @@ export default async function ImprimirAsistenciaPage() {
 
   // Cualquier categoría que ya no exista en el config no debe desaparecer
   const idsConocidos = new Set(event.categories.map((c) => c.id));
-  const huerfanos = verificados.filter((r) => !idsConocidos.has(r.categoria));
+  // Sin categoría (eventos que no clasifican) o con una que ya no existe
+  const huerfanos = verificados.filter(
+    (r) => !r.categoria || !idsConocidos.has(r.categoria),
+  );
 
   return (
     <main className="min-h-screen bg-white p-6 text-black print:p-0">

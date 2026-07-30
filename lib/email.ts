@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import type { EventConfig } from "./types";
+import { identificadorDe } from "./identificador";
 import { waLink } from "./whatsapp";
 import { describeError, logError, logInfo } from "./logger";
 
@@ -107,6 +108,11 @@ function emailShell(event: EventConfig, body: string): string {
 
 /** Correo 1: inscripción recibida, pago pendiente de verificación */
 export function correoRecibidaHtml(event: EventConfig, nombre: string): string {
+  // Prometer un dorsal a quien se identifica por placa sería mentirle
+  const queRecibira =
+    identificadorDe(event).tipo === "dorsal"
+      ? "tu <strong>inscripción definitiva y tu dorsal</strong>"
+      : "tu <strong>inscripción definitiva</strong> con el código QR de acreditación";
   return emailShell(
     event,
     `
@@ -114,16 +120,19 @@ export function correoRecibidaHtml(event: EventConfig, nombre: string): string {
     <p>Recibimos tu inscripción al <strong>${event.name}</strong>. 🎉</p>
     <p>Tu pago está <strong>pendiente de verificación</strong>: la organización
     revisará el comprobante y, al confirmarlo, te llegará un segundo correo
-    con tu <strong>inscripción definitiva y tu dorsal</strong>.</p>
+    con ${queRecibira}.</p>
     <p>Adjuntamos tu comprobante de inscripción provisional en PDF.</p>`,
   );
 }
 
-/** Correo 2: inscripción confirmada, con dorsal y PDF definitivo con QR */
+/**
+ * Correo 2: inscripción confirmada, con el identificador del evento (dorsal o
+ * placa) y el PDF definitivo con QR.
+ */
 export function correoConfirmadaHtml(
   event: EventConfig,
   nombre: string,
-  dorsal: number | null | undefined,
+  referencia: { label: string; value: string } | null,
 ): string {
   const { primary } = event.theme.colors;
   return emailShell(
@@ -133,9 +142,9 @@ export function correoConfirmadaHtml(
     <p>¡Tu pago fue verificado y tu inscripción al
     <strong>${event.name}</strong> está <strong>confirmada</strong>! 🏁</p>
     ${
-      dorsal != null
-        ? `<p style="margin:20px 0">Tu dorsal es:</p>
-           <p style="margin:0 0 20px;font-size:48px;font-weight:bold;color:${primary};border:2px solid ${primary};display:inline-block;padding:8px 28px;border-radius:4px">${dorsal}</p>`
+      referencia
+        ? `<p style="margin:20px 0">Tu ${referencia.label.toLowerCase()}:</p>
+           <p style="margin:0 0 20px;font-size:40px;font-weight:bold;color:${primary};border:2px solid ${primary};display:inline-block;padding:8px 28px;border-radius:4px">${referencia.value}</p>`
         : ""
     }
     <p>Adjuntamos tu <strong>inscripción definitiva en PDF</strong> con tu

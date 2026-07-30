@@ -9,6 +9,7 @@ import {
   type EmailResult,
 } from "./email";
 import { renderInscripcionPdf, type PdfInscripcion } from "./pdf/inscripcion-pdf";
+import { referenciaDe } from "./identificador";
 import { signCheckinToken } from "./qr-token";
 import { getSiteUrl } from "./site-url";
 import { describeError, logError, logInfo, logWarn } from "./logger";
@@ -27,6 +28,8 @@ export function rowParaCorreo(row: InscripcionRow): InscripcionParaCorreo {
     telefono: row.telefono,
     club: row.club,
     dorsal: row.dorsal,
+    placa: row.placa,
+    copiloto: row.copiloto,
     created_at: row.created_at,
   };
 }
@@ -89,12 +92,15 @@ export async function enviarCorreoConfirmada(
     return { sent: false, reason: datos.reason };
   }
 
+  const referencia = referenciaDe(event, inscripcion);
+
   // El QR es deseable pero no bloqueante: su fallo no debe impedir el correo
   let qrDataUrl: string | undefined;
   try {
     if (inscripcion.dorsal == null) {
       logWarn(
-        `Correo 2 (${inscripcion.id}): sin dorsal, el PDF sale sin QR de check-in.`,
+        `Correo 2 (${inscripcion.id}): el token del QR todavía se firma solo con dorsal, ` +
+          `así que en eventos identificados por placa el PDF sale sin QR de check-in.`,
       );
     } else {
       const token = signCheckinToken({
@@ -138,7 +144,7 @@ export async function enviarCorreoConfirmada(
       event,
       to: inscripcion.email,
       subject: `¡Inscripción confirmada! — ${event.name}`,
-      html: correoConfirmadaHtml(event, inscripcion.nombre, inscripcion.dorsal),
+      html: correoConfirmadaHtml(event, inscripcion.nombre, referencia),
       attachments: [{ filename: "inscripcion-definitiva.pdf", content: pdf }],
     });
   } catch (error) {

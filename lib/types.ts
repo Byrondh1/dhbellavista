@@ -119,19 +119,54 @@ export interface PricingSection {
 
 
 /**
+ * Cómo se identifica a cada inscrito.
+ * - "dorsal": número secuencial por categoría que asigna el sistema al
+ *   verificar el pago (downhill).
+ * - "placa": dato que trae el participante en el formulario; la placa del
+ *   vehículo hace de código de inscripción (rodada 4x4).
+ */
+export type TipoIdentificador = "dorsal" | "placa";
+
+export interface Identificador {
+  tipo: TipoIdentificador;
+  /** Etiqueta visible, ej. "Dorsal" o "Placa del vehículo" */
+  label: string;
+}
+
+/**
  * Formulario del módulo propio de inscripciones (modal). Se usa cuando
  * registrationCta.mode === "modal". Los datos van a Supabase vía
  * /api/inscripciones (ver docs/modulo-inscripciones.md).
  */
 export interface RegistrationFormConfig {
-  /** Campos activos además de los siempre presentes (nombre, categoría, teléfono) */
+  /** Campos activos además de los siempre presentes (nombre, correo, teléfono) */
   fields: {
     cedula: boolean;
     ciudad: boolean;
     emergencyContact: boolean;
     /** Campo "club o equipo" (siempre opcional para el usuario) */
     clubTeam: boolean;
+    /**
+     * Select de categoría. false = el evento no clasifica (la rodada 4x4 no
+     * tiene categorías). La lista `categories` del config puede seguir
+     * existiendo para la sección pública: este flag solo controla el
+     * formulario.
+     */
+    categoria: boolean;
+    /** Placa del vehículo, obligatoria cuando está activa */
+    placa: boolean;
+    /**
+     * Nombre del copiloto, opcional para el usuario. Lleno = el vehículo va
+     * con dos personas (sirve para calcular kits de alimentación).
+     */
+    copiloto: boolean;
   };
+  /**
+   * Cómo se identifica cada inscripción el día del evento. Lo consumen el
+   * PDF, los correos, el QR, el panel y la acreditación a través de
+   * lib/identificador.ts — ningún componente decide esto por su cuenta.
+   */
+  identificador: Identificador;
   /** Pedir comprobante de transferencia (imagen o PDF) */
   comprobante: boolean;
   /**
@@ -234,7 +269,12 @@ export interface EventConfig {
   /** Requerido cuando registrationCta.mode === "modal" */
   registrationForm?: RegistrationFormConfig;
   theme: EventTheme;
-  /** Fuente única de categorías: sección Categorías + select del formulario */
+  /**
+   * Categorías del evento: alimentan la sección pública y, si
+   * `registrationForm.fields.categoria` está activo, el select del
+   * formulario. Un evento puede mostrarlas sin clasificar a los inscritos
+   * (la rodada las usa como "modalidades" informativas).
+   */
   categories: Category[];
   /** Sección presente = se renderiza; undefined = no aparece */
   sections: {

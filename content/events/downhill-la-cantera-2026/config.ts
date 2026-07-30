@@ -92,7 +92,13 @@ const config: EventConfig = {
       ciudad: true,
       emergencyContact: true,
       clubTeam: true,
+      // Carrera con categorías y dorsal: nada de placas
+      categoria: true,
+      placa: false,
+      copiloto: false,
     },
+    // El dorsal lo asigna el sistema al verificar el pago, secuencial por categoría
+    identificador: { tipo: "dorsal", label: "Dorsal" },
     comprobante: true,
     privacyNote:
       "Tus datos se usan únicamente para la organización del evento y no se comparten con terceros.",

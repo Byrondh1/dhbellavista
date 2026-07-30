@@ -73,7 +73,7 @@ export async function GET() {
       r.dorsal ?? "",
       r.nombre,
       r.cedula ?? "",
-      nombreCategoria(r.categoria),
+      r.categoria ? nombreCategoria(r.categoria) : "",
       r.estado,
       r.asistio_at ? "Sí" : "No",
       csvFecha(r.asistio_at),

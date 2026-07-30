@@ -25,10 +25,15 @@ function sampleEvent(o: {
   primaryContrast: string;
   venue: string;
   phone: string;
+  /** Identificador real del evento: cambia el texto del Correo 1 */
+  identificador?: { tipo: "dorsal" | "placa"; label: string };
 }): EventConfig {
   return {
     slug: "evento-demo",
     name: o.name,
+    registrationForm: o.identificador
+      ? ({ identificador: o.identificador } as EventConfig["registrationForm"])
+      : undefined,
     club: { name: o.club },
     theme: { colors: { primary: o.primary, primaryContrast: o.primaryContrast } },
     date: { displayLabel: "Septiembre 2026" },
@@ -55,6 +60,7 @@ const rodada = sampleEvent({
   primaryContrast: "#111111",
   venue: "Parque central de El Ángel",
   phone: "593999999999",
+  identificador: { tipo: "placa", label: "Placa del vehículo" },
 });
 
 const NOMBRE = "Juan Andrés Pérez Rosero";
@@ -69,7 +75,15 @@ function page(titulo: string, cuerpo: string) {
 async function main() {
   const salidas: [string, string][] = [
     ["email-1-recibida.html", correoRecibidaHtml(downhill, NOMBRE)],
-    ["email-2-confirmada.html", correoConfirmadaHtml(downhill, NOMBRE, 7)],
+    ["email-1-recibida-rodada.html", correoRecibidaHtml(rodada, NOMBRE)],
+    ["email-2-confirmada.html", correoConfirmadaHtml(downhill, NOMBRE, { label: "Dorsal", value: "7" })],
+    [
+      "email-2-confirmada-rodada.html",
+      correoConfirmadaHtml(rodada, NOMBRE, {
+        label: "Placa del vehículo",
+        value: "PCX-1234",
+      }),
+    ],
     ["email-3-rechazo-downhill.html", correoRechazoHtml(downhill, NOMBRE, MOTIVO)],
     ["email-3-rechazo-rodada.html", correoRechazoHtml(rodada, NOMBRE, MOTIVO)],
     ["email-3-rechazo-sin-motivo.html", correoRechazoHtml(downhill, NOMBRE, null)],

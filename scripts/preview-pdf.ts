@@ -24,9 +24,12 @@ function sampleEvent(overrides: {
   primaryContrast: string;
   venue: string;
   categorias: { id: string; name: string }[];
+  /** Refleja el registrationForm real del evento (identificador y campos) */
+  form: EventConfig["registrationForm"];
 }): EventConfig {
   return {
     name: overrides.name,
+    registrationForm: overrides.form,
     club: { name: overrides.club },
     theme: {
       colors: {
@@ -48,6 +51,19 @@ const downhill = sampleEvent({
   primaryContrast: "#FFFFFF",
   venue: "Pista La Cantera",
   categorias: [{ id: "elite", name: "Élite" }],
+  form: {
+    fields: {
+      cedula: true,
+      ciudad: true,
+      emergencyContact: true,
+      clubTeam: true,
+      categoria: true,
+      placa: false,
+      copiloto: false,
+    },
+    identificador: { tipo: "dorsal", label: "Dorsal" },
+    comprobante: true,
+  },
 });
 
 const rodada = sampleEvent({
@@ -57,6 +73,19 @@ const rodada = sampleEvent({
   primaryContrast: "#111111",
   venue: "Parque central de El Ángel",
   categorias: [{ id: "4x4", name: "Vehículos 4x4" }],
+  form: {
+    fields: {
+      cedula: true,
+      ciudad: true,
+      emergencyContact: true,
+      clubTeam: true,
+      categoria: false,
+      placa: true,
+      copiloto: true,
+    },
+    identificador: { tipo: "placa", label: "Placa del vehículo" },
+    comprobante: true,
+  },
 });
 
 const inscrito = {
@@ -70,27 +99,26 @@ const inscrito = {
 };
 
 async function main() {
-  for (const [slug, event, categoria] of [
-    ["downhill", downhill, "elite"],
-    ["rodada", rodada, "4x4"],
+  // Cada evento con SUS datos: el downhill se identifica por dorsal y
+  // clasifica; la rodada por placa, sin categoría y con copiloto.
+  for (const [slug, event, datos] of [
+    ["downhill", downhill, { categoria: "elite", dorsal: 7 }],
+    [
+      "rodada",
+      rodada,
+      { placa: "PCX-1234", copiloto: "Andrés Pozo Villarreal" },
+    ],
   ] as const) {
-    const provisional = await renderInscripcionPdf(
-      event,
-      { ...inscrito, categoria },
-      "provisional",
-    );
-    writeFileSync(join(outDir, `pdf-${slug}-provisional.pdf`), provisional);
-    console.log(`✓ pdf-${slug}-provisional.pdf (${provisional.length} bytes)`);
+    for (const variant of ["provisional", "definitivo"] as const) {
+      const pdf = await renderInscripcionPdf(
+        event,
+        { ...inscrito, ...datos },
+        variant,
+      );
+      writeFileSync(join(outDir, `pdf-${slug}-${variant}.pdf`), pdf);
+      console.log(`✓ pdf-${slug}-${variant}.pdf (${pdf.length} bytes)`);
+    }
   }
-
-  // Vista previa de la variante definitiva (el QR llega en D2)
-  const definitivo = await renderInscripcionPdf(
-    downhill,
-    { ...inscrito, categoria: "elite", dorsal: 7 },
-    "definitivo",
-  );
-  writeFileSync(join(outDir, "pdf-downhill-definitivo.pdf"), definitivo);
-  console.log(`✓ pdf-downhill-definitivo.pdf (${definitivo.length} bytes)`);
 
   // Aislamiento del correo: sin credenciales debe devolver sent:false,
   // jamás lanzar

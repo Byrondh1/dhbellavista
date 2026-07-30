@@ -11,6 +11,7 @@ import {
   enviarCorreoRecibida,
   rowParaCorreo,
 } from "@/lib/inscripcion-emails";
+import { asignaDorsal, refDe, identificadorDe } from "@/lib/identificador";
 import { describeError, logError, logInfo, logWarn } from "@/lib/logger";
 
 const actionSchema = z.object({
@@ -98,13 +99,16 @@ export async function POST(
     return NextResponse.json({ error: "Inscripción no encontrada." }, { status: 404 });
   }
   const row = data as InscripcionRow;
+  const ident = identificadorDe(event);
 
   try {
     switch (action) {
       case "verificar": {
+        // p_con_dorsal explícito: en los eventos identificados por placa
+        // verificar solo confirma, no numera nada (migración 0008).
         const { data: rpcData, error } = await supabase.rpc(
           "verificar_inscripcion",
-          { p_id: id },
+          { p_id: id, p_con_dorsal: asignaDorsal(event) },
         );
         if (error) throw error;
         logInfo(
@@ -134,7 +138,7 @@ export async function POST(
         }
         const updated = freshData as InscripcionRow;
         logInfo(
-          `Inscripción ${id} verificada · estado=${updated.estado} dorsal=${updated.dorsal} correo_confirmada_at=${updated.correo_confirmada_at ?? "null"}`,
+          `Inscripción ${id} verificada · estado=${updated.estado} ${ident.label}=${refDe(updated, ident) ?? "—"} correo_confirmada_at=${updated.correo_confirmada_at ?? "null"}`,
         );
 
         // Correo 2 solo si nunca salió (idempotente ante doble clic);
@@ -206,7 +210,7 @@ export async function POST(
           );
         }
         logInfo(
-          `Verificación revertida en ${id} · dorsal ${row.dorsal ?? "—"} liberado${row.asistio_at ? " · se borró el check-in" : ""}`,
+          `Verificación revertida en ${id}${row.dorsal != null ? ` · dorsal ${row.dorsal} liberado` : ""}${row.asistio_at ? " · se borró el check-in" : ""}`,
         );
         return NextResponse.json({
           ok: true,
@@ -324,7 +328,7 @@ export async function POST(
           .select()
           .single();
         if (error) throw error;
-        logInfo(`Check-in registrado para ${id} (dorsal ${row.dorsal})`);
+        logInfo(`Check-in registrado para ${id} (${ident.label} ${refDe(row, ident) ?? "—"})`);
         return NextResponse.json({
           ok: true,
           yaPresente: false,
@@ -343,7 +347,7 @@ export async function POST(
           .eq("id", id)
           .eq("event_slug", event.slug);
         if (error) throw error;
-        logInfo(`Check-in deshecho para ${id} (dorsal ${row.dorsal})`);
+        logInfo(`Check-in deshecho para ${id} (${ident.label} ${refDe(row, ident) ?? "—"})`);
         return NextResponse.json({ ok: true, asistio_at: null });
       }
     }

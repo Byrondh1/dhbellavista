@@ -89,9 +89,18 @@ const config: EventConfig = {
     fields: {
       cedula: true,
       ciudad: true,
+      // Obligatorio: es 4x4 en páramo
       emergencyContact: true,
       clubTeam: true,
+      // La rodada no clasifica: las "modalidades" de la sección pública son
+      // informativas y no se piden en el formulario.
+      categoria: false,
+      // La placa es el código de inscripción (una inscripción por vehículo)
+      placa: true,
+      // Lleno = kit de alimentación para dos (piloto y copiloto)
+      copiloto: true,
     },
+    identificador: { tipo: "placa", label: "Placa del vehículo" },
     comprobante: true,
     privacyNote:
       "Tus datos se usan únicamente para la organización del evento y no se comparten con terceros.",

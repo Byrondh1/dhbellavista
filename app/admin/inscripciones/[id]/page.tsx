@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import type { InscripcionRow } from "@/lib/inscripciones";
+import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
 import { EstadoBadge } from "@/components/admin/EstadoBadge";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
@@ -43,14 +44,32 @@ export default async function InscripcionDetailPage({
   }
   const comprobanteEsPdf = row.comprobante_path?.endsWith(".pdf") ?? false;
 
-  const categoryName =
-    event.categories.find((c) => c.id === row.categoria)?.name ?? row.categoria;
+  const ident = identificadorDe(event);
+  const referencia = refDe(row, ident);
+  const categoryName = row.categoria
+    ? (event.categories.find((c) => c.id === row.categoria)?.name ?? row.categoria)
+    : null;
 
   const fields: { label: string; value: string | null }[] = [
     { label: "Correo", value: row.email },
     { label: "Cédula", value: row.cedula },
-    { label: "Categoría", value: categoryName },
+    // La categoría solo se muestra en eventos que clasifican
+    ...(usaCategorias(event)
+      ? [{ label: "Categoría", value: categoryName }]
+      : []),
     { label: "Ciudad", value: row.ciudad },
+    ...(ident.tipo === "placa"
+      ? [{ label: ident.label, value: row.placa }]
+      : []),
+    ...(event.registrationForm?.fields.copiloto
+      ? [
+          {
+            label: "Copiloto",
+            // Explícito: de esto depende si el kit es para uno o para dos
+            value: row.copiloto ?? "Sin copiloto (kit para 1)",
+          },
+        ]
+      : []),
     { label: "Teléfono", value: row.telefono },
     {
       label: "Contacto de emergencia",
@@ -79,9 +98,9 @@ export default async function InscripcionDetailPage({
           <h1 className="text-3xl font-bold uppercase">{row.nombre}</h1>
           <div className="flex items-center gap-3">
             <EstadoBadge estado={row.estado} />
-            {row.dorsal != null && (
+            {referencia && (
               <span className="rounded-brand bg-primary px-3 py-1 text-lg font-bold text-primary-contrast">
-                #{row.dorsal}
+                {ident.tipo === "dorsal" ? `#${referencia}` : referencia}
               </span>
             )}
           </div>

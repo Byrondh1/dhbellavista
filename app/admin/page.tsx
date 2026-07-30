@@ -76,8 +76,9 @@ export default async function AdminPage({
         (r.cedula ?? "").includes(query)),
   );
 
-  const categoryName = (id: string) =>
-    event.categories.find((c) => c.id === id)?.name ?? id;
+  // Puede venir null: los eventos sin categorías (rodada) no la guardan
+  const categoryName = (id: string | null) =>
+    id ? (event.categories.find((c) => c.id === id)?.name ?? id) : "—";
 
   return (
     <main className="flex-1 py-10">

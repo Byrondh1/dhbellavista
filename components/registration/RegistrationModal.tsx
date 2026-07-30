@@ -357,27 +357,29 @@ export function RegistrationModal({
               </div>
             )}
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold" htmlFor="ins-categoria">
-                Categoría *
-              </label>
-              <select
-                id="ins-categoria"
-                name="categoria"
-                required
-                defaultValue=""
-                className={inputClasses}
-              >
-                <option value="" disabled>
-                  Selecciona tu categoría
-                </option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
+            {form.fields.categoria && (
+              <div>
+                <label className="mb-1 block text-sm font-semibold" htmlFor="ins-categoria">
+                  Categoría *
+                </label>
+                <select
+                  id="ins-categoria"
+                  name="categoria"
+                  required
+                  defaultValue=""
+                  className={inputClasses}
+                >
+                  <option value="" disabled>
+                    Selecciona tu categoría
                   </option>
-                ))}
-              </select>
-            </div>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {form.fields.ciudad && (
               <div>
@@ -409,6 +411,50 @@ export function RegistrationModal({
                 className={inputClasses}
               />
             </div>
+
+            {form.fields.placa && (
+              <div>
+                <label className="mb-1 block text-sm font-semibold" htmlFor="ins-placa">
+                  {form.identificador.label} *
+                </label>
+                <input
+                  id="ins-placa"
+                  name="placa"
+                  required
+                  minLength={5}
+                  maxLength={12}
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  placeholder="PCX-1234"
+                  // uppercase visual: el servidor normaliza igual, así que no
+                  // hay que pelear con el teclado del celular
+                  className={`${inputClasses} uppercase tabular-nums`}
+                />
+                <p className="mt-1 text-xs text-muted">
+                  Es tu código de inscripción: con esta placa te acreditamos el
+                  día del evento.
+                </p>
+              </div>
+            )}
+
+            {form.fields.copiloto && (
+              <div>
+                <label className="mb-1 block text-sm font-semibold" htmlFor="ins-copiloto">
+                  Nombre del copiloto (opcional)
+                </label>
+                <input
+                  id="ins-copiloto"
+                  name="copiloto"
+                  maxLength={120}
+                  autoComplete="off"
+                  className={inputClasses}
+                />
+                <p className="mt-1 text-xs text-muted">
+                  Si vienes con copiloto, escríbelo aquí: el kit de
+                  alimentación es para las dos personas.
+                </p>
+              </div>
+            )}
 
             {form.fields.emergencyContact && (
               <div className="grid gap-4 sm:grid-cols-2">
