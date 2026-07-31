@@ -80,7 +80,7 @@ const config: EventConfig = {
   // Cambiar mode a "modal" cuando el proyecto Supabase esté configurado
   // (SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Vercel + supabase/schema.sql)
   registrationCta: {
-    mode: "whatsapp",
+    mode: "modal",
     label: "¡Inscríbete ya!",
     stickyLabel: "Inscríbete",
   },
