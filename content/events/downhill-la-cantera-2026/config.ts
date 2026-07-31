@@ -16,13 +16,18 @@ import sponsor3 from "./images/sponsor-3.png";
 import sponsor4 from "./images/sponsor-4.png";
 import sponsor5 from "./images/sponsor-5.png";
 
-// TODO(Byron): reemplazar placeholders — fecha exacta, número de WhatsApp,
-// links de redes/comunidad, categorías definitivas y fotos reales en images/.
+// PENDIENTE(Byron): número de WhatsApp, links de redes/comunidad, fotos
+// reales en images/, auspiciantes y el PDF del reglamento.
+//
+// El slug se mantiene como "downhill-la-cantera-2026" aunque el evento pasó a
+// llamarse Bella Vista: es la clave de las inscripciones ya guardadas
+// (event_slug), la ruta de los comprobantes en Storage y el valor de
+// NEXT_PUBLIC_EVENT en Vercel. Renombrarlo es una operación aparte.
 const config: EventConfig = {
   slug: "downhill-la-cantera-2026",
-  name: "Downhill La Cantera 2026",
+  name: "Downhill Bella Vista 2026",
   tagline:
-    "Carrera nacional de MTB descenso en la pista La Cantera, El Ángel — Carchi.",
+    "Carrera de MTB descenso en El Ángel, Carchi — sector Bella Vista.",
 
   club: {
     name: "Remnant EB",
@@ -34,17 +39,19 @@ const config: EventConfig = {
   },
 
   date: {
-    start: "2026-09-12", // TODO: fecha por confirmar
-    displayLabel: "Septiembre 2026 · fecha por confirmar",
+    start: "2026-09-06",
+    displayLabel: "Domingo 6 de septiembre de 2026",
   },
 
   location: {
-    venue: "Pista La Cantera",
+    venue: "Sector Bella Vista (graderío)",
     city: "El Ángel",
     province: "Carchi",
     country: "Ecuador",
-    coordinates: { lat: 0.6266, lng: -77.9364 }, // TODO: coordenadas exactas de la pista
-    googleMapsUrl: "https://maps.google.com/?q=0.6266,-77.9364", // TODO: pin exacto
+    // PENDIENTE: coordenadas del graderío. Estas son las de El Ángel centro,
+    // así que el JSON-LD y el "cómo llegar" apuntan al pueblo, no a la pista.
+    coordinates: { lat: 0.6266, lng: -77.9364 },
+    googleMapsUrl: "https://maps.google.com/?q=0.6266,-77.9364",
   },
 
   site: {
@@ -54,27 +61,27 @@ const config: EventConfig = {
   },
 
   seo: {
-    title: "Downhill La Cantera 2026 — Carrera nacional de MTB descenso",
+    title: "Downhill Bella Vista 2026 — Carrera de MTB descenso en El Ángel",
     description:
-      "Carrera nacional de MTB downhill en la pista La Cantera, El Ángel, Carchi. Organiza Remnant EB. Inscripciones abiertas — septiembre 2026.",
+      "Carrera de MTB descenso en El Ángel, Carchi: bajada única cronometrada hasta el sector del graderío de Bella Vista, con nueve categorías. Organiza Remnant EB — domingo 6 de septiembre de 2026.",
     keywords: [
       "downhill",
       "MTB",
       "descenso",
-      "La Cantera",
+      "Bella Vista",
       "El Ángel",
       "Carchi",
       "Ecuador",
       "ciclismo",
     ],
-    // TODO: reemplazar por el afiche del evento (1200×630, <300 KB)
+    // PENDIENTE: afiche del evento (1200×630, <300 KB)
     ogImagePath: "/events/downhill-la-cantera-2026/og.png",
   },
 
   whatsapp: {
-    phone: "593999999999", // TODO: número real del organizador
+    phone: "593999999999", // PENDIENTE: número real del organizador
     registrationMessage:
-      "Hola, quiero inscribirme al Downhill La Cantera 2026. Mi nombre es: ",
+      "Hola, quiero inscribirme al Downhill Bella Vista 2026. Mi nombre es: ",
     // communityInviteUrl: "https://chat.whatsapp.com/...",
   },
 
@@ -118,20 +125,26 @@ const config: EventConfig = {
     radius: "sharp",
   },
 
+  // Las 9 categorías del evento, en el orden en que se corren. Los `id` son
+  // la clave que se guarda en la base: no cambiarlos una vez haya inscritos.
+  // PENDIENTE: descripciones (edades y requisitos de cada una).
   categories: [
-    // TODO: categorías definitivas de la carrera
-    { id: "elite", name: "Élite", description: "Categoría abierta de máximo nivel." },
-    { id: "master", name: "Máster 30+", description: "Corredores de 30 años en adelante." },
-    { id: "juvenil", name: "Juvenil", description: "Hasta 17 años." },
-    { id: "novatos", name: "Novatos", description: "Primera experiencia en competencia." },
-    { id: "damas", name: "Damas", description: "Categoría femenina abierta." },
+    { id: "infantil", name: "Infantil" },
+    { id: "prejuvenil", name: "Prejuvenil" },
+    { id: "juvenil", name: "Juvenil" },
+    { id: "damas", name: "Damas" },
+    { id: "master", name: "Máster" },
+    { id: "rigidas", name: "Rígidas" },
+    { id: "enduro", name: "Enduro" },
+    { id: "elite", name: "Élite" },
+    { id: "proelite", name: "ProElite" },
   ],
 
   sections: {
     hero: {
       backgroundImage: {
         src: heroImage,
-        alt: "Rider de MTB descendiendo la pista La Cantera",
+        alt: "Rider de MTB descendiendo hacia el graderío de Bella Vista",
       },
       showCountdown: true,
       secondaryCtaLabel: "Únete a la comunidad",
@@ -139,16 +152,16 @@ const config: EventConfig = {
 
     about: {
       paragraphs: [
-        "El Downhill La Cantera vuelve en 2026 con una nueva edición de la carrera de descenso más esperada del norte del país. La pista La Cantera, en las faldas de El Ángel, combina secciones técnicas de roca, peraltes naturales y saltos que exigen lo mejor de cada rider.",
-        "Organizado por el club Remnant EB, el evento reúne a corredores de todo el Ecuador en un fin de semana de competencia, comunidad y puro gravity.",
+        "Downhill Bella Vista 2026 es una carrera de descenso en El Ángel, Carchi. Una bajada de tierra rápida y técnica que termina en el sector del graderío, con saltos y obstáculos.",
+        "Cada corredor tiene una sola bajada cronometrada para dejarlo todo. Nueve categorías, desde Infantil hasta ProElite. Organiza Remnant EB.",
       ],
       image: {
         src: aboutImage,
-        alt: "Sección técnica de la pista La Cantera",
+        alt: "Tramo de la bajada de Bella Vista",
       },
       highlights: [
-        { label: "Nivel", value: "Nacional" },
-        { label: "Categorías", value: "5" },
+        { label: "Bajada", value: "Única" },
+        { label: "Categorías", value: "9" },
         { label: "Provincia", value: "Carchi" },
         { label: "Disciplina", value: "DH" },
       ],
@@ -156,75 +169,66 @@ const config: EventConfig = {
 
     categoriesSection: {
       intro:
-        "Compite en la categoría que va con tu nivel. Toda categoría exige casco integral y guantes; se recomienda protección completa.",
+        "Nueve categorías, desde Infantil hasta ProElite. Toda categoría exige casco integral y guantes; se recomienda protección completa.",
     },
 
     route: {
       mode: "embed",
-      // TODO: reemplazar por el iframe de Google My Maps con la pista dibujada
+      // PENDIENTE: iframe de Google My Maps con la bajada dibujada
       embedUrl: "https://maps.google.com/maps?q=0.6266,-77.9364&z=15&output=embed",
-      stats: {
-        distanceKm: 1.8,
-        elevationGainM: 320, // TODO: desnivel real de la pista
-        maxAltitudeM: 3100,
-        difficulty: "Extrema",
-      },
+      // PENDIENTE: distancia, desnivel y altitud reales de la bajada. Sin
+      // datos no se muestran cifras: es preferible a publicar una inventada.
+      stats: {},
       description:
-        "La pista La Cantera es un trazado corto y explosivo: secciones de roca suelta, peraltes naturales, drops y un jardín de piedras que define la carrera. Se camina en el reconocimiento y se corre con todo el domingo.",
+        "Una bajada de tierra rápida y técnica que termina en el sector del graderío, con saltos y obstáculos. Se reconoce en la mañana y se corre en una sola bajada cronometrada.",
       images: [
-        { src: track1, alt: "Sección de roca de la pista La Cantera" },
-        { src: track2, alt: "Salto en la parte baja de la pista" },
+        { src: track1, alt: "Tramo técnico de la bajada" },
+        { src: track2, alt: "Salto en la parte baja del trazado" },
       ],
     },
 
-    // TODO: horarios reales del evento
     schedule: {
       days: [
         {
-          dateLabel: "Sábado (día 1)",
+          dateLabel: "Domingo 6 de septiembre de 2026",
           items: [
-            { time: "08:00", title: "Acreditación y entrega de placas" },
-            { time: "09:00", title: "Reconocimiento de pista", detail: "Caminata obligatoria por la pista." },
-            { time: "10:00", title: "Entrenamientos libres" },
-            { time: "15:00", title: "Bajada clasificatoria" },
-          ],
-        },
-        {
-          dateLabel: "Domingo (día 2)",
-          items: [
-            { time: "08:00", title: "Entrenamiento de calentamiento" },
-            { time: "10:00", title: "Carrera — bajada 1" },
-            { time: "13:00", title: "Carrera — bajada final" },
-            { time: "15:30", title: "Premiación", detail: "En la zona de meta." },
+            {
+              time: "08:00",
+              title: "Reconocimiento de pista",
+              detail: "Hasta las 11:30.",
+            },
+            { time: "11:30", title: "Cierre de registro" },
+            {
+              time: "12:00",
+              title: "Inicio del evento",
+              detail: "Bajada única cronometrada.",
+            },
+            { time: "14:00", title: "Premiación" },
           ],
         },
       ],
     },
 
-    // TODO: costos y datos de pago reales
     pricing: {
+      // PENDIENTE: qué incluye la inscripción (el campo `includes` se omite
+      // mientras no esté definido; la tarjeta se ve bien sin él).
       items: [
         {
-          label: "Inscripción general",
-          price: "$25",
-          includes: ["Placa de competencia", "Hidratación", "Cronometraje", "Premiación por categoría"],
-        },
-        {
-          label: "Categoría Juvenil",
+          label: "Inscripción · todas las categorías",
           price: "$15",
-          includes: ["Placa de competencia", "Hidratación", "Cronometraje"],
-          note: "Menores de edad con autorización firmada del representante.",
         },
       ],
+      // Los datos bancarios NO van aquí: se muestran dentro del formulario de
+      // inscripción y se editan en /admin/configuracion.
       paymentInfo: [
-        "Transferencia bancaria (datos por WhatsApp)",
-        "Efectivo el día de la acreditación",
+        "Transferencia o depósito: los datos de la cuenta aparecen al inscribirte.",
+        "Se sube el comprobante en el mismo formulario.",
       ],
-      deadlineLabel: "Inscripciones abiertas hasta completar cupos.",
+      deadlineLabel: "Registro abierto hasta las 11:30 del día del evento.",
     },
 
-    // TODO: reglamento definitivo (y agregar pdfPath cuando exista el PDF
-    // en public/events/downhill-la-cantera-2026/reglamento.pdf)
+    // PENDIENTE: reglamento definitivo revisado por ti (y agregar pdfPath
+    // cuando exista el PDF en public/events/downhill-la-cantera-2026/)
     rules: {
       items: [
         {
@@ -233,15 +237,15 @@ const config: EventConfig = {
         },
         {
           title: "Estado de la bicicleta",
-          body: "La bicicleta debe pasar revisión mecánica en la acreditación: frenos operativos en ambas ruedas, dirección firme y llantas en buen estado.",
+          body: "La bicicleta debe pasar revisión mecánica en el registro: frenos operativos en ambas ruedas, dirección firme y llantas en buen estado.",
         },
         {
           title: "Menores de edad",
-          body: "Los menores de edad deben presentar autorización firmada por su representante legal al momento de la acreditación.",
+          body: "Los menores de edad deben presentar autorización firmada por su representante legal al momento del registro.",
         },
         {
           title: "Reconocimiento de pista",
-          body: "La caminata de reconocimiento del sábado es obligatoria. Ningún corredor podrá entrenar sin haber completado el reconocimiento.",
+          body: "El reconocimiento es de 8:00 a 11:30 del día del evento. Es la única oportunidad de ver el trazado antes de la bajada cronometrada.",
         },
         {
           title: "Responsabilidad",
@@ -250,7 +254,7 @@ const config: EventConfig = {
       ],
     },
 
-    // TODO: auspiciantes reales (logos en images/ y links)
+    // PENDIENTE: auspiciantes reales (logos en images/ y links)
     sponsors: {
       tiers: [
         {
@@ -274,15 +278,15 @@ const config: EventConfig = {
       ],
     },
 
-    // TODO: fotos reales de ediciones anteriores
+    // PENDIENTE: fotos reales de ediciones anteriores
     gallery: {
       images: [
-        { src: gallery1, alt: "Rider en la sección de roca" },
-        { src: gallery2, alt: "Salto en la zona baja de la pista" },
-        { src: gallery3, alt: "Público en la zona de meta" },
+        { src: gallery1, alt: "Rider en un tramo técnico de la bajada" },
+        { src: gallery2, alt: "Salto en la zona baja del trazado" },
+        { src: gallery3, alt: "Público en el graderío de Bella Vista" },
         { src: gallery4, alt: "Premiación de la edición anterior" },
-        { src: gallery5, alt: "Corredor en el jardín de piedras" },
-        { src: gallery6, alt: "Panorámica de la pista La Cantera" },
+        { src: gallery5, alt: "Corredor tomando una curva de tierra" },
+        { src: gallery6, alt: "Panorámica del sector Bella Vista" },
       ],
       // instagramUrl: "https://instagram.com/...",
     },
@@ -292,7 +296,7 @@ const config: EventConfig = {
         {
           name: "Byron Herrería",
           role: "Organizador — Remnant EB",
-          phone: "593999999999", // TODO: número real
+          phone: "593999999999", // PENDIENTE: número real
         },
       ],
       showCommunityCta: true,

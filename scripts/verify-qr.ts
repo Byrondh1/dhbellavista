@@ -97,11 +97,11 @@ async function main() {
 
   // 3. PDF definitivo con QR para revisión visual
   const event = {
-    name: "Downhill La Cantera 2026",
+    name: "Downhill Bella Vista 2026",
     club: { name: "Remnant EB" },
     theme: { colors: { primary: "#CC2200", primaryContrast: "#FFFFFF" } },
     date: { displayLabel: "Septiembre 2026" },
-    location: { venue: "Pista La Cantera", city: "El Ángel" },
+    location: { venue: "Sector Bella Vista", city: "El Ángel" },
     categories: [{ id: "elite", name: "Élite" }],
     sections: {},
   } as unknown as EventConfig;

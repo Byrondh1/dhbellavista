@@ -9,7 +9,7 @@ Eventos actuales:
 
 | Slug | Evento | Club |
 |---|---|---|
-| `downhill-la-cantera-2026` | Downhill La Cantera 2026 | Remnant EB |
+| `downhill-la-cantera-2026` | Downhill Bella Vista 2026 | Remnant EB |
 | `rodada-angelena-4x4-2026` | Rodada Angeleña 4x4 2026 | 4L Off Road Club |
 
 ## Desarrollo

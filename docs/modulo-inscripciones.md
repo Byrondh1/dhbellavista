@@ -74,7 +74,7 @@ registrationForm: {
 }
 ```
 
-| | Downhill La Cantera | Rodada Angeleña 4x4 |
+| | Downhill Bella Vista | Rodada Angeleña 4x4 |
 |---|---|---|
 | Identificador | **Dorsal**, secuencial por categoría, lo asigna el sistema al verificar | **Placa del vehículo**, la trae el participante al inscribirse |
 | Categorías | Sí (select obligatorio en el formulario) | No (las "modalidades" de la sección pública son informativas) |

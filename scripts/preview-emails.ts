@@ -45,11 +45,11 @@ function sampleEvent(o: {
 }
 
 const downhill = sampleEvent({
-  name: "Downhill La Cantera 2026",
+  name: "Downhill Bella Vista 2026",
   club: "Remnant EB",
   primary: "#CC2200",
   primaryContrast: "#FFFFFF",
-  venue: "Pista La Cantera",
+  venue: "Sector Bella Vista",
   phone: "593999999999",
 });
 
