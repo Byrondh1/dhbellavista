@@ -1,20 +1,16 @@
 import type { EventConfig } from "@/lib/types";
-import heroImage from "./images/hero.png";
-import aboutImage from "./images/about.png";
-import clubLogo from "./images/logo-club.png";
-import track1 from "./images/track-1.png";
-import track2 from "./images/track-2.png";
-import gallery1 from "./images/gallery-1.png";
-import gallery2 from "./images/gallery-2.png";
-import gallery3 from "./images/gallery-3.png";
-import gallery4 from "./images/gallery-4.png";
-import gallery5 from "./images/gallery-5.png";
-import gallery6 from "./images/gallery-6.png";
-import sponsor1 from "./images/sponsor-1.png";
-import sponsor2 from "./images/sponsor-2.png";
-import sponsor3 from "./images/sponsor-3.png";
-import sponsor4 from "./images/sponsor-4.png";
-import sponsor5 from "./images/sponsor-5.png";
+import heroImage from "./images/hero.webp";
+import aboutImage from "./images/about.webp";
+import clubLogo from "./images/logo-club.webp";
+import track1 from "./images/track-1.webp";
+import track2 from "./images/track-2.webp";
+import sponsor1 from "./images/sponsor-1.webp";
+import sponsor2 from "./images/sponsor-2.webp";
+import sponsor3 from "./images/sponsor-3.webp";
+import sponsor4 from "./images/sponsor-4.webp";
+import sponsor5 from "./images/sponsor-5.webp";
+// Lista generada por `npm run fotos` con las gallery-N que existan
+import { galeria } from "./images/galeria";
 
 // PENDIENTE(Byron): número de WhatsApp, links de redes/comunidad, fotos
 // reales en images/, auspiciantes y el PDF del reglamento.
@@ -278,18 +274,16 @@ const config: EventConfig = {
       ],
     },
 
-    // PENDIENTE: fotos reales de ediciones anteriores
-    gallery: {
-      images: [
-        { src: gallery1, alt: "Rider en un tramo técnico de la bajada" },
-        { src: gallery2, alt: "Salto en la zona baja del trazado" },
-        { src: gallery3, alt: "Público en el graderío de Bella Vista" },
-        { src: gallery4, alt: "Premiación de la edición anterior" },
-        { src: gallery5, alt: "Corredor tomando una curva de tierra" },
-        { src: gallery6, alt: "Panorámica del sector Bella Vista" },
-      ],
-      // instagramUrl: "https://instagram.com/...",
-    },
+    // PENDIENTE: fotos reales de ediciones anteriores.
+    // La lista sale de images/galeria.ts (la regenera `npm run fotos` con las
+    // fotos que haya en la carpeta). Sin fotos, la sección no se renderiza.
+    gallery:
+      galeria.length > 0
+        ? {
+            images: galeria,
+            // instagramUrl: "https://instagram.com/...",
+          }
+        : undefined,
 
     contact: {
       organizers: [

@@ -10,6 +10,7 @@
     "build:downhill": "NEXT_PUBLIC_EVENT=downhill-la-cantera-2026 next build",
     "build:rodada": "NEXT_PUBLIC_EVENT=rodada-angelena-4x4-2026 next build",
     "placeholders": "node scripts/make-placeholders.mjs",
+    "fotos": "node scripts/fotos.mjs",
     "start": "next start",
     "lint": "eslint",
     "diagnose:downhill": "NEXT_PUBLIC_EVENT=downhill-la-cantera-2026 tsx --env-file=.env.local --tsconfig scripts/tsconfig.preview.json scripts/diagnose-email.ts",
@@ -40,6 +41,7 @@
     "eslint-config-next": "16.2.11",
     "jsqr": "^1.4.0",
     "pngjs": "^7.0.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5"

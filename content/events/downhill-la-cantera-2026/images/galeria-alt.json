@@ -1,0 +1,9 @@
+{
+  "_comentario": "Texto alternativo de cada foto: lo leen los lectores de pantalla y Google. Describe lo que se ve. Se aplica al correr `npm run fotos`.",
+  "gallery-1.webp": "Rider en un tramo técnico de la bajada",
+  "gallery-2.webp": "Salto en la zona baja del trazado",
+  "gallery-3.webp": "Público en el graderío de Bella Vista",
+  "gallery-4.webp": "Premiación de la edición anterior",
+  "gallery-5.webp": "Corredor tomando una curva de tierra",
+  "gallery-6.webp": "Panorámica del sector Bella Vista"
+}

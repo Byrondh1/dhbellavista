@@ -1,19 +1,15 @@
 import type { EventConfig } from "@/lib/types";
-import heroImage from "./images/hero.png";
-import aboutImage from "./images/about.png";
-import clubLogo from "./images/logo-club.png";
-import treadTexture from "./images/texture-tread.png";
-import gallery1 from "./images/gallery-1.png";
-import gallery2 from "./images/gallery-2.png";
-import gallery3 from "./images/gallery-3.png";
-import gallery4 from "./images/gallery-4.png";
-import gallery5 from "./images/gallery-5.png";
-import gallery6 from "./images/gallery-6.png";
-import sponsor1 from "./images/sponsor-1.png";
-import sponsor2 from "./images/sponsor-2.png";
-import sponsor3 from "./images/sponsor-3.png";
-import sponsor4 from "./images/sponsor-4.png";
-import sponsor5 from "./images/sponsor-5.png";
+import heroImage from "./images/hero.webp";
+import aboutImage from "./images/about.webp";
+import clubLogo from "./images/logo-club.webp";
+import treadTexture from "./images/texture-tread.webp";
+import sponsor1 from "./images/sponsor-1.webp";
+import sponsor2 from "./images/sponsor-2.webp";
+import sponsor3 from "./images/sponsor-3.webp";
+import sponsor4 from "./images/sponsor-4.webp";
+import sponsor5 from "./images/sponsor-5.webp";
+// Lista generada por `npm run fotos` con las gallery-N que existan
+import { galeria } from "./images/galeria";
 
 // PENDIENTE(Byron): número de WhatsApp, links de redes/comunidad, fotos
 // reales en images/, auspiciantes, track GPX y el PDF del reglamento.
@@ -272,18 +268,16 @@ const config: EventConfig = {
       ],
     },
 
-    // PENDIENTE: fotos reales de rodadas anteriores
-    gallery: {
-      images: [
-        { src: gallery1, alt: "Caravana 4x4 subiendo al páramo" },
-        { src: gallery2, alt: "Cruce de lodo en la ruta" },
-        { src: gallery3, alt: "Frailejones en la Reserva Ecológica El Ángel" },
-        { src: gallery4, alt: "Vehículos junto a las Lagunas de Razococha" },
-        { src: gallery5, alt: "Rescate con eslinga en pendiente" },
-        { src: gallery6, alt: "Grupo del 4L Off Road Club en la laguna" },
-      ],
-      // instagramUrl: "https://instagram.com/...",
-    },
+    // PENDIENTE: fotos reales de rodadas anteriores.
+    // La lista sale de images/galeria.ts (la regenera `npm run fotos` con las
+    // fotos que haya en la carpeta). Sin fotos, la sección no se renderiza.
+    gallery:
+      galeria.length > 0
+        ? {
+            images: galeria,
+            // instagramUrl: "https://instagram.com/...",
+          }
+        : undefined,
 
     contact: {
       organizers: [
