@@ -40,7 +40,7 @@ const config: EventConfig = {
   },
 
   location: {
-    venue: "Sector Bella Vista (graderío)",
+    venue: "Sector Bella Vista",
     city: "El Ángel",
     province: "Carchi",
     country: "Ecuador",

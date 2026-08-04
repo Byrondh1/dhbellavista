@@ -17,7 +17,7 @@ const config: EventConfig = {
   slug: "rodada-angelena-4x4-2026",
   name: "Rodada Angeleña 4x4 2026",
   tagline:
-    "Travesía off-road desde El Ángel hasta las Lagunas de Razococha, por el páramo de Carchi.",
+    "Travesía off-road desde El Ángel hasta la Laguna de Razococha, por el páramo de Carchi.",
 
   club: {
     name: "4L Off Road Club",
@@ -52,7 +52,7 @@ const config: EventConfig = {
   seo: {
     title: "Rodada Angeleña 4x4 2026 — Travesía off-road a Razococha",
     description:
-      "Travesía off-road desde la ciudad de El Ángel hasta las Lagunas de Razococha, por caminos que desafían a cada piloto. Organiza el 4L Off Road Club — sábado 5 de septiembre de 2026.",
+      "Travesía off-road desde la ciudad de El Ángel hasta la Laguna de Razococha, por caminos que desafían a cada piloto. Organiza el 4L Off Road Club — sábado 5 de septiembre de 2026.",
     keywords: [
       "4x4",
       "off road",
@@ -145,12 +145,12 @@ const config: EventConfig = {
 
     about: {
       paragraphs: [
-        "Rodada Angeleña 4x4 2026 es una travesía off-road desde la ciudad de El Ángel hasta las Lagunas de Razococha, por caminos que desafían a cada piloto.",
+        "Rodada Angeleña 4x4 2026 es una travesía off-road desde la ciudad de El Ángel hasta la Laguna de Razococha, por caminos que desafían a cada piloto.",
         "Una aventura por el páramo de Carchi para vivir el 4x4 en su máxima expresión. Organiza 4L Off Road Club.",
       ],
       image: {
         src: aboutImage,
-        alt: "Lagunas de Razococha en el páramo de El Ángel",
+        alt: "Laguna de Razococha en el páramo de El Ángel",
       },
       highlights: [
         { label: "Modalidad", value: "Travesía" },
@@ -174,7 +174,7 @@ const config: EventConfig = {
       // muestran cifras: es preferible a publicar una inventada.
       stats: {},
       description:
-        "La travesía parte del Parque Central de El Ángel y sube por el páramo hasta las Lagunas de Razococha, por caminos que desafían a cada piloto.",
+        "La travesía parte del Parque Central de El Ángel y sube por el páramo hasta la Laguna de Razococha, por caminos que desafían a cada piloto.",
       allowGpxDownload: true,
     },
 
@@ -201,11 +201,14 @@ const config: EventConfig = {
           label: "Inscripción por vehículo",
           price: "$20",
           includes: [
+            "Refrigerio",
             "Alimentación para piloto y copiloto",
             "Sticker del evento",
-            "Una pala",
+            "Una pala de rescate",
+            "Servicio de wincha y tractor de rescate",
+            "Fotografía profesional",
           ],
-          note: "Una inscripción por vehículo, sin importar cuántos vayan en él.",
+          note: "Los beneficios cubren solo a los participantes inscritos. Una inscripción por vehículo.",
         },
       ],
       // Los datos bancarios NO van aquí: se muestran dentro del formulario de

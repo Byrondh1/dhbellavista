@@ -15,7 +15,7 @@ export const galeria: ImageAsset[] = [
   { src: foto1, alt: "Caravana 4x4 subiendo al páramo" },
   { src: foto2, alt: "Cruce de lodo en la ruta" },
   { src: foto3, alt: "Frailejones en el páramo de El Ángel" },
-  { src: foto4, alt: "Vehículos junto a las Lagunas de Razococha" },
+  { src: foto4, alt: "Vehículos junto a la Laguna de Razococha" },
   { src: foto5, alt: "Rescate con eslinga en pendiente" },
   { src: foto6, alt: "Grupo del 4L Off Road Club en la laguna" },
 ];
