@@ -11,10 +11,12 @@
     "build:rodada": "NEXT_PUBLIC_EVENT=rodada-angelena-4x4-2026 next build",
     "placeholders": "node scripts/make-placeholders.mjs",
     "fotos": "node scripts/fotos.mjs",
+    "verificar:imagenes": "node scripts/verificar-imagenes.mjs",
     "start": "next start",
     "lint": "eslint",
     "diagnose:downhill": "NEXT_PUBLIC_EVENT=downhill-la-cantera-2026 tsx --env-file=.env.local --tsconfig scripts/tsconfig.preview.json scripts/diagnose-email.ts",
-    "diagnose:rodada": "NEXT_PUBLIC_EVENT=rodada-angelena-4x4-2026 tsx --env-file=.env.local --tsconfig scripts/tsconfig.preview.json scripts/diagnose-email.ts"
+    "diagnose:rodada": "NEXT_PUBLIC_EVENT=rodada-angelena-4x4-2026 tsx --env-file=.env.local --tsconfig scripts/tsconfig.preview.json scripts/diagnose-email.ts",
+    "prepare": "git config core.hooksPath .githooks || exit 0"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.10",

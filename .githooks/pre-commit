@@ -1,0 +1,7 @@
+#!/bin/sh
+# Hook versionado: se activa con `npm install` (script prepare de package.json)
+# o a mano con `git config core.hooksPath .githooks`.
+#
+# Valida que las imágenes en staging tengan el formato que dice su extensión.
+# Para saltárselo en un commit puntual: git commit --no-verify
+exec node scripts/verificar-imagenes.mjs

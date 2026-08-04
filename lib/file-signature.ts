@@ -1,6 +1,11 @@
 /**
  * Verifica que los primeros bytes del archivo correspondan al tipo MIME
  * declarado (evita, por ejemplo, un ejecutable renombrado a .png).
+ *
+ * Pariente de scripts/verificar-imagenes.mjs, que hace lo contrario —
+ * detectar qué formato ES un archivo— para el hook de pre-commit. No
+ * comparten código porque aquel corre en Node plano, sin TypeScript. Si se
+ * agrega un formato aquí, conviene agregarlo allá.
  */
 export function matchesSignature(bytes: Uint8Array, mime: string): boolean {
   switch (mime) {

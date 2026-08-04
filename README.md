@@ -22,6 +22,9 @@ npm run dev:downhill   # o dev:rodada
 El evento activo se elige con `NEXT_PUBLIC_EVENT=<slug>` (los scripts npm ya
 la definen). Builds de producción: `npm run build:downhill` / `build:rodada`.
 
+`npm install` instala además un **hook de pre-commit** (apunta
+`core.hooksPath` a `.githooks/`, sin dependencias).
+
 ## Cómo crear un nuevo evento
 
 1. Copia una carpeta de `content/events/` con el nuevo slug y edita su
@@ -57,8 +60,16 @@ Reglas de la plantilla:
 
 ## Imágenes
 
-- Fotos: comprimir antes de subir (≤1920px de ancho el hero, ≤1200px el
-  resto). `next/image` hace el resto (WebP/AVIF, lazy, blur).
+- Fotos: deja el archivo en `content/events/<slug>/images/` con el nombre que
+  indica el README de esa carpeta y corre **`npm run fotos`**: redimensiona,
+  comprime y convierte a WebP. `next/image` hace el resto (lazy, blur, y la
+  versión del ancho de cada pantalla).
+- **El pre-commit rechaza imágenes cuya extensión miente sobre su formato**
+  (por ejemplo un PNG renombrado a `.webp`, que es lo que pasa al renombrar
+  en vez de convertir). Dice qué archivo y qué formato es en realidad; se
+  arregla con `npm run fotos`. Para saltarlo en un commit puntual:
+  `git commit --no-verify`. A mano, sobre archivos concretos:
+  `npm run verificar:imagenes -- ruta/al/archivo.webp`.
 - Open Graph (`public/events/<slug>/og.png`): **1200×630 y menos de 300 KB**
   — es la vista previa al compartir por WhatsApp.
 - Los placeholders actuales se regeneran con `npm run placeholders`.
