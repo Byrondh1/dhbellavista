@@ -1,4 +1,5 @@
 import type { EventConfig } from "./types";
+import { EB_CORP } from "./ebcorp";
 import { getSiteUrl } from "./site-url";
 
 /** Convierte "$25" / "25 USD" en número para schema.org; null si no se puede */
@@ -56,6 +57,17 @@ export function buildEventJsonLd(config: EventConfig): Record<string, unknown> {
       "@type": "Organization",
       name: config.club.name,
       url: siteUrl,
+      ...(config.sections.contact?.email && {
+        email: config.sections.contact.email,
+      }),
+      // Buzón de inscripciones: `reservations` es el contactType de
+      // schema.org para reservas e inscripciones a un evento.
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "reservations",
+        email: EB_CORP.inscripciones,
+        availableLanguage: "Spanish",
+      },
     },
     ...(config.seo.ogImagePath && {
       image: [`${siteUrl}${config.seo.ogImagePath}`],

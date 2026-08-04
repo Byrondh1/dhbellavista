@@ -95,7 +95,6 @@ async function main() {
 
   // Aislamiento: sin credenciales no debe lanzar
   delete process.env.RESEND_API_KEY;
-  delete process.env.EMAIL_FROM_ADDRESS;
   const r = await enviarCorreoRechazo(
     downhill,
     {
@@ -111,7 +110,6 @@ async function main() {
   console.log("rechazo sin credenciales →", JSON.stringify(r));
 
   process.env.RESEND_API_KEY = "re_fake";
-  process.env.EMAIL_FROM_ADDRESS = "inscripciones@ebcorp.dev";
   const r2 = await sendEventEmail({
     event: downhill,
     to: "test@test.com",

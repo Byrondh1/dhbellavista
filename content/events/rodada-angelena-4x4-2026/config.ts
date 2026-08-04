@@ -290,6 +290,9 @@ const config: EventConfig = {
           phone: "593999999999", // PENDIENTE: número real
         },
       ],
+      // Correo del club. Es también el reply-to de los correos automáticos
+      // del módulo de inscripciones (lib/email.ts).
+      email: "4loffroad@ebcorp.dev",
       showCommunityCta: true,
     },
   },

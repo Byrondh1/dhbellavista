@@ -56,7 +56,6 @@ async function main() {
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
-    EMAIL_FROM_ADDRESS: process.env.EMAIL_FROM_ADDRESS,
     QR_SECRET: process.env.QR_SECRET,
     EMAIL_TEST_REDIRECT: process.env.EMAIL_TEST_REDIRECT,
     NEXT_PUBLIC_EVENT: process.env.NEXT_PUBLIC_EVENT,

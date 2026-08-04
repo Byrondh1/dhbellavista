@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import type { EventConfig } from "./types";
+import { EB_CORP } from "./ebcorp";
 import { identificadorDe } from "./identificador";
 import { waLink } from "./whatsapp";
 import { describeError, logError, logInfo } from "./logger";
@@ -18,7 +19,7 @@ export interface EmailResult {
  * tampoco debe ser invisible.
  *
  * Por evento: el nombre visible del remitente es el nombre del evento
- * (la dirección es común, EMAIL_FROM_ADDRESS del dominio de EB Corp) y el
+ * (la dirección es común, EB_CORP.inscripciones) y el
  * reply-to es el correo del organizador si el config lo define.
  *
  * EMAIL_TEST_REDIRECT: si está definida, TODO correo se desvía a esa
@@ -39,14 +40,14 @@ export async function sendEventEmail({
   attachments?: { filename: string; content: Buffer }[];
 }): Promise<EmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const fromAddress = process.env.EMAIL_FROM_ADDRESS;
+  // El remitente NO es variable de entorno: es la misma dirección en local y
+  // en producción (lo que cambia por entorno es EMAIL_TEST_REDIRECT, que
+  // afecta al destinatario). Tenerlo en código evita un modo de fallo real:
+  // desplegar con la variable ausente y quedarse sin correos.
+  const fromAddress = EB_CORP.inscripciones;
 
-  const faltantes = [
-    !apiKey && "RESEND_API_KEY",
-    !fromAddress && "EMAIL_FROM_ADDRESS",
-  ].filter(Boolean);
-  if (faltantes.length > 0) {
-    const reason = `env-missing: ${faltantes.join(", ")}`;
+  if (!apiKey) {
+    const reason = "env-missing: RESEND_API_KEY";
     logError(`Correo NO enviado a ${to}: falta configuración (${reason})`);
     return { sent: false, reason };
   }

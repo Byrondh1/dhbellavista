@@ -1,4 +1,5 @@
 import type { EventConfig, PricingSection } from "@/lib/types";
+import { EB_CORP } from "@/lib/ebcorp";
 import { RegistrationCtaButton } from "@/components/ui/RegistrationCtaButton";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -65,6 +66,18 @@ export function Pricing({
       <div className="mt-10">
         <RegistrationCtaButton event={event} />
       </div>
+
+      <p className="mt-6 text-sm text-muted">
+        ¿Dudas con tu inscripción o tu pago? Escríbenos a{" "}
+        <a
+          href={`mailto:${EB_CORP.inscripciones}?subject=${encodeURIComponent(`Inscripción — ${event.name}`)}`}
+          aria-label={`Escribir a inscripciones de ${event.name} por correo`}
+          className="font-medium text-foreground hover:text-primary"
+        >
+          {EB_CORP.inscripciones}
+        </a>
+        .
+      </p>
     </Section>
   );
 }

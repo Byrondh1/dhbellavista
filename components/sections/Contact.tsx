@@ -1,4 +1,5 @@
 import type { ContactSection, EventConfig } from "@/lib/types";
+import { EB_CORP } from "@/lib/ebcorp";
 import { waLink } from "@/lib/whatsapp";
 import { ButtonLink } from "@/components/ui/Button";
 import { Section } from "@/components/ui/Section";
@@ -8,10 +9,12 @@ import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 export function Contact({
   section,
   clubName,
+  eventName,
   whatsapp,
 }: {
   section: ContactSection;
   clubName: string;
+  eventName: string;
   whatsapp: EventConfig["whatsapp"];
 }) {
   return (
@@ -49,17 +52,37 @@ export function Contact({
         ))}
       </div>
 
-      {section.email && (
-        <p className="mt-8 text-muted">
-          Correo:{" "}
-          <a
-            href={`mailto:${section.email}`}
-            className="font-medium text-foreground hover:text-primary"
-          >
-            {section.email}
-          </a>
-        </p>
-      )}
+      <dl className="mt-8 space-y-3 text-muted">
+        {section.email && (
+          <div>
+            <dt className="inline">Correo del club: </dt>
+            <dd className="inline">
+              <a
+                href={`mailto:${section.email}`}
+                aria-label={`Escribir por correo a ${clubName}`}
+                className="font-medium text-foreground hover:text-primary"
+              >
+                {section.email}
+              </a>
+            </dd>
+          </div>
+        )}
+        {/* Buzón compartido por los dos eventos: dudas de inscripción, pagos
+            y comprobantes. Va aquí además del club porque es lo que la gente
+            busca cuando no sabe a quién escribirle. */}
+        <div>
+          <dt className="inline">Inscripciones: </dt>
+          <dd className="inline">
+            <a
+              href={`mailto:${EB_CORP.inscripciones}`}
+              aria-label={`Escribir a inscripciones de ${eventName} por correo`}
+              className="font-medium text-foreground hover:text-primary"
+            >
+              {EB_CORP.inscripciones}
+            </a>
+          </dd>
+        </div>
+      </dl>
 
       {section.showCommunityCta && whatsapp.communityInviteUrl && (
         <div className="mt-10">

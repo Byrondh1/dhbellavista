@@ -53,6 +53,7 @@ export default function Home() {
           <Contact
             section={contact}
             clubName={event.club.name}
+            eventName={event.name}
             whatsapp={event.whatsapp}
           />
         )}

@@ -7,6 +7,7 @@ import {
   COMPROBANTE_TYPES,
   DEFAULT_CONSENT_TEXT,
 } from "@/lib/registration-schema";
+import { EB_CORP } from "@/lib/ebcorp";
 import { MENSAJE_CIERRE_POR_DEFECTO } from "@/lib/estado-inscripciones";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { PasoDatosPago, type DatosPagoVisible } from "./PasoDatosPago";
@@ -561,6 +562,19 @@ export function RegistrationModal({
               <WhatsAppIcon className="h-4 w-4" />
               ¿Problemas con el formulario? Inscríbete por WhatsApp
             </a>
+
+            {/* Segunda vía por si el problema es con el pago o el comprobante,
+                que por correo se resuelve mejor (se puede adjuntar) */}
+            <p className="text-center text-xs text-muted">
+              O escríbenos a{" "}
+              <a
+                href={`mailto:${EB_CORP.inscripciones}?subject=${encodeURIComponent(`Inscripción — ${eventName}`)}`}
+                aria-label={`Escribir a inscripciones de ${eventName} por correo`}
+                className="font-medium underline hover:text-primary"
+              >
+                {EB_CORP.inscripciones}
+              </a>
+            </p>
           </form>
         )}
       </div>

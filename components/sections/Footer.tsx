@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { EventConfig } from "@/lib/types";
+import { EB_CORP } from "@/lib/ebcorp";
 import { Container } from "@/components/ui/Container";
 import { TextureOverlay } from "@/components/ui/TextureOverlay";
 
@@ -34,6 +35,15 @@ export function Footer({ event }: { event: EventConfig }) {
                 {event.location.city}, {event.location.province} —{" "}
                 {event.location.country}
               </p>
+              {event.sections.contact?.email && (
+                <a
+                  href={`mailto:${event.sections.contact.email}`}
+                  aria-label={`Escribir por correo a ${event.club.name}`}
+                  className="text-sm font-medium text-muted hover:text-primary"
+                >
+                  {event.sections.contact.email}
+                </a>
+              )}
             </div>
           </div>
 
@@ -64,7 +74,13 @@ export function Footer({ event }: { event: EventConfig }) {
           </p>
           <p>
             Desarrollado por{" "}
-            <span className="font-medium text-foreground">EB Corp</span>
+            <a
+              href={`mailto:${EB_CORP.email}`}
+              aria-label={`Escribir a ${EB_CORP.nombre} por correo`}
+              className="font-medium text-foreground hover:text-primary"
+            >
+              {EB_CORP.nombre}
+            </a>
           </p>
         </div>
       </Container>

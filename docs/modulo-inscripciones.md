@@ -195,11 +195,17 @@ que no son indexables); la sección Costos sigue usando el texto libre de
 
 ## Correos (Resend)
 
-Variables de servidor: `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS` (la dirección;
-el nombre visible del remitente sale del config del evento), `QR_SECRET`
-(firma del QR de check-in; generar con `openssl rand -hex 32`) y, opcional,
+Variables de servidor: `RESEND_API_KEY`, `QR_SECRET` (firma del QR de
+check-in; generar con `openssl rand -hex 32`) y, opcional,
 `EMAIL_TEST_REDIRECT` para desviar todos los correos a una dirección de
 prueba.
+
+El **remitente** no es variable de entorno: sale de `EB_CORP.inscripciones`
+(`lib/ebcorp.ts`), porque es la misma dirección en local y en producción —
+lo que cambia por entorno es el destinatario, vía `EMAIL_TEST_REDIRECT`. El
+nombre visible del remitente sí sale del config del evento, y el **reply-to**
+es el correo del club (`sections.contact.email`), así que las respuestas de
+los participantes llegan a Remnant EB o a 4L Off Road según el evento.
 
 Los tres correos del módulo:
 

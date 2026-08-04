@@ -120,10 +120,9 @@ async function main() {
     }
   }
 
-  // Aislamiento del correo: sin credenciales debe devolver sent:false,
+  // Aislamiento del correo: sin RESEND_API_KEY debe devolver sent:false,
   // jamás lanzar
   delete process.env.RESEND_API_KEY;
-  delete process.env.EMAIL_FROM_ADDRESS;
   const sinCredenciales = await sendEventEmail({
     event: downhill,
     to: "test@test.com",
@@ -133,7 +132,6 @@ async function main() {
   console.log("sin credenciales →", JSON.stringify(sinCredenciales));
 
   process.env.RESEND_API_KEY = "re_fake";
-  process.env.EMAIL_FROM_ADDRESS = "inscripciones@ebcorp.dev";
   const redFallida = await sendEventEmail({
     event: downhill,
     to: "test@test.com",
