@@ -17,7 +17,7 @@ const csp = [
   // data:/blob: para los blur placeholders de next/image;
   // OpenStreetMap para los tiles del mapa GPX; Google para píxeles de GA;
   // Supabase para las URLs firmadas de comprobantes en el panel admin
-  `img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://*.google-analytics.com https://*.googletagmanager.com https://*.supabase.co`,
+  `img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://*.google-analytics.com https://*.googletagmanager.com https://*.supabase.co https://i.ytimg.com`,
   // next/font sirve las fuentes desde el propio dominio
   `font-src 'self'`,
   // GA4 (mediciones), Supabase (login/sesión del admin) y HMR de dev
@@ -25,7 +25,7 @@ const csp = [
   // Iframes embebidos: Google Maps / My Maps (mapa "embed") y Google Forms
   // (posible formulario embebido). maps.google.com redirige a www.google.com,
   // por eso van ambos.
-  `frame-src https://www.google.com https://maps.google.com https://docs.google.com`,
+  `frame-src https://www.google.com https://maps.google.com https://docs.google.com https://www.youtube-nocookie.com`,
   // Destinos permitidos para envío de formularios (Formspree como opción futura)
   `form-action 'self' https://formspree.io`,
   `object-src 'none'`,

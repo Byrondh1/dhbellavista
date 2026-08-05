@@ -1,14 +1,18 @@
 import type { GallerySection } from "@/lib/types";
+import { mediosDeGaleria } from "@/lib/galeria";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GalleryGrid } from "./GalleryGrid";
 
 export function Gallery({ section }: { section: GallerySection }) {
+  // Fotos locales + videos de YouTube en una sola lista ordenada
+  const medios = mediosDeGaleria(section);
+
   return (
     <Section id="galeria" surface>
       <SectionHeading kicker="Ediciones anteriores" title="Galería" />
 
-      <GalleryGrid images={section.images} />
+      <GalleryGrid medios={medios} />
 
       {section.instagramUrl && (
         <p className="mt-8">

@@ -202,8 +202,29 @@ export interface SponsorsSection {
   }[];
 }
 
+/**
+ * Video de la galería, embebido desde YouTube. No se aloja nada en el sitio:
+ * el peso lo carga YouTube, y solo cuando alguien lo abre.
+ */
+export interface GalleryVideo {
+  /**
+   * Enlace en cualquiera de sus formas (youtu.be/…, watch?v=…, /shorts/…)
+   * o el id pelado. Un enlace irreconocible se omite con un aviso en consola.
+   */
+  youtube: string;
+  /** Título bajo la miniatura; también es el texto accesible del botón */
+  title: string;
+  /**
+   * Posición exacta en el grid (0 = primero). Sin definir, los videos van
+   * antes que las fotos.
+   */
+  position?: number;
+}
+
 export interface GallerySection {
   images: ImageAsset[];
+  /** Videos de YouTube, mezclados con las fotos en el mismo grid */
+  videos?: GalleryVideo[];
   /** Link "ver más" hacia Instagram u otra red */
   instagramUrl?: string;
 }

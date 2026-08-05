@@ -281,6 +281,18 @@ const config: EventConfig = {
       galeria.length > 0
         ? {
             images: galeria,
+            // Videos de YouTube: se mezclan con las fotos en el mismo grid.
+            // No se aloja nada aquí — la miniatura pesa ~10 KB y el
+            // reproductor solo se carga al abrir el video. Sirve cualquier
+            // forma del enlace: youtu.be/…, watch?v=…, /shorts/… o el id.
+            // videos: [
+            //   {
+            //     youtube: "https://youtu.be/XXXXXXXXXXX",
+            //     title: "Bajada ganadora, edición 2025",
+            //   },
+            //   // `position: 2` lo coloca tercero en el grid; sin eso, los
+            //   // videos van antes que las fotos.
+            // ],
             // instagramUrl: "https://instagram.com/...",
           }
         : undefined,
