@@ -57,6 +57,9 @@ export function buildEventJsonLd(config: EventConfig): Record<string, unknown> {
       "@type": "Organization",
       name: config.club.name,
       url: siteUrl,
+      // Con "+" y código de país: es lo que schema.org espera y lo que hace
+      // que el número sea marcable desde el resultado de búsqueda.
+      telephone: `+${config.whatsapp.phone.replace(/\D/g, "")}`,
       ...(config.sections.contact?.email && {
         email: config.sections.contact.email,
       }),

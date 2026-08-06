@@ -75,7 +75,7 @@ const config: EventConfig = {
   },
 
   whatsapp: {
-    phone: "593999999999", // PENDIENTE: número real del organizador
+    phone: "593961699925",
     registrationMessage:
       "Hola, quiero inscribirme al Downhill Bella Vista 2026. Mi nombre es: ",
     // communityInviteUrl: "https://chat.whatsapp.com/...",
@@ -302,7 +302,7 @@ const config: EventConfig = {
         {
           name: "Byron Herrería",
           role: "Organizador — Remnant EB",
-          phone: "593999999999", // PENDIENTE: número real
+          phone: "593961699925",
         },
       ],
       // Correo del club. Es también el reply-to de los correos automáticos

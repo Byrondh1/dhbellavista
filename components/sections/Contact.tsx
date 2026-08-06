@@ -1,6 +1,6 @@
 import type { ContactSection, EventConfig } from "@/lib/types";
 import { EB_CORP } from "@/lib/ebcorp";
-import { waLink } from "@/lib/whatsapp";
+import { telLink, telefonoVisible, waLink } from "@/lib/whatsapp";
 import { ButtonLink } from "@/components/ui/Button";
 import { Section } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -38,15 +38,28 @@ export function Contact({
               </p>
             )}
             {organizer.phone && (
-              <a
-                href={waLink(organizer.phone)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-2 font-medium text-primary hover:underline"
-              >
-                <WhatsAppIcon className="h-4 w-4" />
-                Escribir por WhatsApp
-              </a>
+              <div className="mt-3 flex flex-col items-start gap-2">
+                {/* El número a la vista y no solo el botón de WhatsApp: hay
+                    quien prefiere llamar, y quien lo quiere para guardarlo en
+                    la agenda antes de subir al páramo, donde no hay datos. */}
+                <a
+                  href={telLink(organizer.phone)}
+                  aria-label={`Llamar a ${organizer.name} al ${telefonoVisible(organizer.phone)}`}
+                  className="font-medium tabular-nums text-foreground hover:text-primary"
+                >
+                  {telefonoVisible(organizer.phone)}
+                </a>
+                <a
+                  href={waLink(organizer.phone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Escribir a ${organizer.name} por WhatsApp`}
+                  className="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                  Escribir por WhatsApp
+                </a>
+              </div>
             )}
           </div>
         ))}

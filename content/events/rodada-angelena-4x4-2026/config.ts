@@ -68,7 +68,7 @@ const config: EventConfig = {
   },
 
   whatsapp: {
-    phone: "593999999999", // PENDIENTE: número real del organizador
+    phone: "593961699925",
     registrationMessage:
       "Hola, quiero inscribirme a la Rodada Angeleña 4x4 2026. Mi nombre es: ",
     // communityInviteUrl: "https://chat.whatsapp.com/...",
@@ -299,7 +299,7 @@ const config: EventConfig = {
         {
           name: "Byron Herrería",
           role: "Organizador — 4L Off Road Club",
-          phone: "593999999999", // PENDIENTE: número real
+          phone: "593961699925",
         },
       ],
       // Correo del club. Es también el reply-to de los correos automáticos
