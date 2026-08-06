@@ -33,7 +33,14 @@ export function About({ section }: { section: AboutSection }) {
               key={label}
               className="rounded-brand border border-border bg-surface p-4 text-center"
             >
-              <dd className="text-3xl font-bold text-primary">{value}</dd>
+              {/* Tamaño fluido y no fijo: la rejilla es de dos columnas en el
+                celular, y a 30 px un valor de más de siete caracteres se sale
+                de la tarjeta ("Razococha" se pasaba 23 px a 390 px). El
+                break-word es el respaldo para pantallas de 320 px, donde ni
+                encogiendo alcanza. */}
+            <dd className="text-[clamp(1.25rem,6vw,2rem)] font-bold text-primary [overflow-wrap:break-word]">
+              {value}
+            </dd>
               <dt className="mt-1 text-sm uppercase tracking-wider text-muted">
                 {label}
               </dt>

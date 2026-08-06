@@ -1,4 +1,4 @@
-import type { EventConfig } from "@/lib/types";
+import type { Category, EventConfig } from "@/lib/types";
 import heroImage from "./images/hero.webp";
 import aboutImage from "./images/about.webp";
 import clubLogo from "./images/logo-club.webp";
@@ -11,8 +11,21 @@ import sponsor5 from "./images/sponsor-5.webp";
 // Lista generada por `npm run fotos` con las gallery-N que existan
 import { galeria } from "./images/galeria";
 
-// PENDIENTE(Byron): número de WhatsApp, links de redes/comunidad, fotos
-// reales en images/, auspiciantes, track GPX y el PDF del reglamento.
+// PENDIENTE(Byron): links de redes/comunidad, auspiciantes, track GPX y el
+// PDF del reglamento.
+
+/**
+ * Modalidades de la rodada. Solo informativas: la rodada no clasifica y el
+ * formulario no las pide (registrationForm.fields.categoria = false).
+ *
+ * Va fuera del config para que la tarjeta "Modalidades" cuente este array en
+ * lugar de llevar el número escrito a mano, que ya se había desincronizado.
+ */
+const modalidades: Category[] = [
+  { id: "4x4", name: "Vehículos 4x4", description: "Camionetas y jeeps 4x4." },
+  { id: "motos", name: "Motos enduro", description: "Motocicletas de enduro y trail." },
+];
+
 const config: EventConfig = {
   slug: "rodada-angelena-4x4-2026",
   name: "Rodada Angeleña 4x4 2026",
@@ -125,13 +138,7 @@ const config: EventConfig = {
     radius: "sharp",
   },
 
-  // Solo informativas: la rodada no clasifica y el formulario no las pide
-  // (registrationForm.fields.categoria = false).
-  categories: [
-    { id: "4x4", name: "Vehículos 4x4", description: "Camionetas y jeeps 4x4." },
-    { id: "utv", name: "UTV / Side by Side", description: "Vehículos utilitarios todo terreno." },
-    { id: "motos", name: "Motos enduro", description: "Motocicletas de enduro y trail." },
-  ],
+  categories: modalidades,
 
   sections: {
     hero: {
@@ -156,14 +163,14 @@ const config: EventConfig = {
         { label: "Modalidad", value: "Travesía" },
         { label: "Destino", value: "Razococha" },
         { label: "Terreno", value: "Páramo" },
-        { label: "Modalidades", value: "3" },
+        { label: "Modalidades", value: String(modalidades.length) },
       ],
     },
 
     categoriesSection: {
       title: "Modalidades",
       intro:
-        "La rodada es abierta: participa con tu 4x4, UTV o moto enduro. Todo vehículo debe llegar con tanque lleno y en buen estado mecánico.",
+        "La rodada es abierta: participa con tu 4x4 o moto enduro. Todo vehículo debe llegar con tanque lleno y en buen estado mecánico.",
     },
 
     route: {
