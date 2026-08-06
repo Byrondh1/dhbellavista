@@ -12,12 +12,12 @@ import foto6 from "./gallery-6.webp";
 
 /** Fotos de la galería de rodada-angelena-4x4-2026, en orden */
 export const galeria: ImageAsset[] = [
-  { src: foto1, alt: "Caravana 4x4 subiendo al páramo" },
-  { src: foto2, alt: "Cruce de lodo en la ruta" },
-  { src: foto3, alt: "Frailejones en el páramo de El Ángel" },
-  { src: foto4, alt: "Vehículos junto a la Laguna de Razococha" },
-  { src: foto5, alt: "Rescate con eslinga en pendiente" },
-  { src: foto6, alt: "Grupo del 4L Off Road Club en la laguna" },
+  { src: foto1, alt: "El grupo completo posando junto a los 4x4 estacionados en el sendero, con el farallón de roca y los frailejones de la ladera al fondo" },
+  { src: foto2, alt: "Los vehículos formados sobre el filo del camino, vistos desde el otro lado de la quebrada" },
+  { src: foto3, alt: "Un participante sentado en el peñasco mirando la laguna y las lomas del páramo" },
+  { src: foto4, alt: "La caravana bajando por las curvas del camino de tierra, vista desde lo alto del páramo" },
+  { src: foto5, alt: "El grupo posando entre los frailejones, con la laguna y la neblina del páramo detrás" },
+  { src: foto6, alt: "Primer plano de una llanta embarrada en el tramo de piedra, con el resto de la caravana adelante" },
 ];
 
 export default galeria;

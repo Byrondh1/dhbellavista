@@ -95,14 +95,20 @@ async function optimizar(dir, nombre, archivos) {
   const antes = (await stat(fuente)).size;
   const meta = await sharp(fuente).metadata();
 
-  // Ya está lista: WebP, dentro del ancho del rol y del presupuesto de peso.
-  // Recomprimir un WebP en cada corrida degrada la foto sin ganar nada.
-  if (
-    !original &&
-    (meta.width ?? 0) <= rol.ancho &&
-    antes <= rol.presupuestoKB * 1024
-  ) {
-    console.log(`   · ${nombre}.webp ya optimizada (${meta.width}px, ${kb(antes)})`);
+  // Ya está lista: WebP y dentro del ancho del rol. Recomprimir un WebP en
+  // cada corrida lo degrada sin ganar nada, así que el presupuesto de peso NO
+  // entra aquí: una foto muy detallada puede no bajar de él por más vueltas
+  // que se le dé, y volver a codificarla solo le quita calidad. Se avisa y se
+  // deja quieta; si de verdad estorba, se recorta o se cambia la foto.
+  // `meta.format` y no la extensión: un PNG renombrado a .webp se ve idéntico
+  // en el explorador de archivos y pesa cinco veces más. Es el error que más
+  // se repite al subir fotos desde el celular o por la web de GitHub.
+  if (!original && meta.format === "webp" && (meta.width ?? 0) <= rol.ancho) {
+    const gorda = antes > rol.presupuestoKB * 1024;
+    console.log(
+      `   · ${nombre}.webp ya optimizada (${meta.width}px, ${kb(antes)})` +
+        (gorda ? `  ⚠ sobre el presupuesto de ${rol.presupuestoKB} KB` : ""),
+    );
     return { saltada: true };
   }
 
