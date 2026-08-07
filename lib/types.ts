@@ -170,6 +170,16 @@ export interface RegistrationFormConfig {
   /** Pedir comprobante de transferencia (imagen o PDF) */
   comprobante: boolean;
   /**
+   * Avisar por correo al club cada vez que entra una inscripción. Va al
+   * correo de `sections.contact.email`; sin ese correo no se envía nada.
+   *
+   * Sin definir se asume `true`. Se apaga cuando el volumen de inscripciones
+   * amenace el tope diario de Resend: el aviso al organizador es prescindible
+   * (el panel tiene la misma información), el correo del participante no.
+   * OJO: cambiarlo exige redesplegar, como cualquier valor del config.
+   */
+  notificarOrganizador?: boolean;
+  /**
    * Candado de código: cierra las inscripciones aunque el panel las tenga
    * abiertas, y sin depender de la base. Para el día a día NO se usa esto —
    * se cierra desde /admin/configuracion (tabla evento_datos_pago), que surte

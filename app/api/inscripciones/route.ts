@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
-import { enviarCorreoRecibida } from "@/lib/inscripcion-emails";
+import {
+  enviarAvisoOrganizador,
+  enviarCorreoRecibida,
+} from "@/lib/inscripcion-emails";
 import { describeError, logError, logInfo, logWarn } from "@/lib/logger";
 import { matchesSignature } from "@/lib/file-signature";
 import {
@@ -282,6 +285,33 @@ export async function POST(request: Request) {
       }
     } else {
       logWarn(`Inscripción ${row.id} guardada, pero sin Correo 1: ${reason}`);
+    }
+
+    // Aviso al club. Va después del correo del participante a propósito: si
+    // el tope diario de Resend se agota, que el que llegue sea el suyo. Su
+    // fallo no se refleja en la respuesta ni en la base — el participante no
+    // tiene por qué enterarse de un problema del buzón de la organización.
+    try {
+      const aviso = await enviarAvisoOrganizador(event, {
+        id: row.id,
+        nombre: input.nombre,
+        email: input.email,
+        cedula: input.cedula ?? null,
+        categoria: input.categoria ?? null,
+        ciudad: input.ciudad ?? null,
+        telefono: input.telefono,
+        placa: input.placa ?? null,
+        copiloto: input.copiloto || null,
+        club: input.club || null,
+        created_at: new Date().toISOString(),
+      });
+      if (!aviso.sent) {
+        logWarn(`Sin aviso al organizador de ${row.id}: ${aviso.reason}`);
+      }
+    } catch (error) {
+      // enviarAvisoOrganizador no lanza, pero este try es la garantía de que
+      // un cambio futuro ahí dentro tampoco pueda tumbar una inscripción.
+      logError(`Excepción enviando el aviso al organizador de ${row.id}`, error);
     }
 
     return NextResponse.json({ ok: true, emailSent }, { status: 201 });

@@ -2,6 +2,7 @@ import QRCode from "qrcode";
 import type { EventConfig } from "./types";
 import type { InscripcionRow } from "./inscripciones";
 import {
+  avisoOrganizadorHtml,
   correoConfirmadaHtml,
   correoRechazoHtml,
   correoRecibidaHtml,
@@ -185,5 +186,75 @@ export async function enviarCorreoRechazo(
     to: inscripcion.email,
     subject: `Revisa tu inscripción — ${event.name}`,
     html: correoRechazoHtml(event, inscripcion.nombre, motivo),
+  });
+}
+
+/**
+ * Aviso interno al club: entró una inscripción nueva.
+ *
+ * Va al correo del club (`sections.contact.email`), nunca a una dirección
+ * escrita a mano: cada evento avisa al suyo. El reply-to es el participante,
+ * para poder responderle desde el propio aviso.
+ *
+ * Es el correo prescindible del módulo: si falla, la inscripción está igual
+ * en el panel. Por eso no guarda timestamp ni se puede reenviar — a
+ * diferencia de los correos al participante, que sí son su constancia.
+ * Nunca lanza.
+ */
+export async function enviarAvisoOrganizador(
+  event: EventConfig,
+  inscripcion: InscripcionParaCorreo,
+): Promise<EmailResult> {
+  if (event.registrationForm?.notificarOrganizador === false) {
+    const reason = "desactivado: registrationForm.notificarOrganizador";
+    logInfo(`Aviso al organizador omitido (${inscripcion.id}): ${reason}`);
+    return { sent: false, reason };
+  }
+
+  const destino = event.sections.contact?.email;
+  if (!destino) {
+    const reason = "sin-destinatario: sections.contact.email no está definido";
+    logWarn(
+      `Aviso al organizador omitido (${inscripcion.id}): ${reason}. ` +
+        `Defínelo en el config de ${event.slug} para recibir estos avisos.`,
+    );
+    return { sent: false, reason };
+  }
+
+  const datos = validarDatos(inscripcion);
+  if (!datos.ok) {
+    logError(
+      `Aviso al organizador omitido (${inscripcion.id}): ${datos.reason}`,
+      inscripcion,
+    );
+    return { sent: false, reason: datos.reason };
+  }
+
+  // El id de la categoría no le dice nada a nadie: se muestra su nombre
+  const categoria = inscripcion.categoria
+    ? (event.categories.find((c) => c.id === inscripcion.categoria)?.name ??
+      inscripcion.categoria)
+    : null;
+
+  const fichaUrl = `${getSiteUrl(event)}/admin/inscripciones/${inscripcion.id}`;
+
+  logInfo(`Aviso al organizador: enviando a ${destino} (${inscripcion.id})`);
+  return await sendEventEmail({
+    event,
+    to: destino,
+    // Responder al aviso le escribe al participante, no al propio club
+    replyTo: inscripcion.email,
+    subject: `Nueva inscripción — ${event.name}: ${inscripcion.nombre}`,
+    html: avisoOrganizadorHtml(
+      event,
+      {
+        nombre: inscripcion.nombre,
+        ciudad: inscripcion.ciudad,
+        telefono: inscripcion.telefono,
+        identificador: referenciaDe(event, inscripcion),
+        categoria,
+      },
+      fichaUrl,
+    ),
   });
 }

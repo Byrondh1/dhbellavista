@@ -116,6 +116,10 @@ const config: EventConfig = {
     },
     identificador: { tipo: "placa", label: "Placa del vehículo" },
     comprobante: true,
+    // Aviso al club por cada inscripción nueva. Ponlo en false si el
+    // volumen amenaza el tope diario de Resend: el correo del participante
+    // es el que no se puede perder. Requiere redesplegar.
+    notificarOrganizador: true,
     privacyNote:
       "Tus datos se usan únicamente para la organización del evento y no se comparten con terceros.",
   },
