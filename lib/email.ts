@@ -118,13 +118,13 @@ function emailShell(event: EventConfig, body: string): string {
   return `
 <div style="margin:0 auto;max-width:560px;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a">
   <div style="background:${primary};color:${primaryContrast};padding:20px 24px">
-    <p style="margin:0;font-size:12px;letter-spacing:2px;text-transform:uppercase">${event.club.name}</p>
-    <h1 style="margin:4px 0 0;font-size:22px;text-transform:uppercase">${event.name}</h1>
+    <p style="margin:0;font-size:12px;letter-spacing:2px;text-transform:uppercase">${escapeHtml(event.club.name)}</p>
+    <h1 style="margin:4px 0 0;font-size:22px;text-transform:uppercase">${escapeHtml(event.name)}</h1>
   </div>
   <div style="padding:24px;border:1px solid #e5e5e5;border-top:0">
     ${body}
     <p style="margin-top:28px;font-size:12px;color:#777">
-      ${event.date.displayLabel} · ${event.location.venue}, ${event.location.city}.
+      ${escapeHtml(event.date.displayLabel)} · ${escapeHtml(event.location.venue)}, ${escapeHtml(event.location.city)}.
       Si tienes dudas, responde a este correo o escríbenos por WhatsApp.
     </p>
   </div>
@@ -141,8 +141,8 @@ export function correoRecibidaHtml(event: EventConfig, nombre: string): string {
   return emailShell(
     event,
     `
-    <p>Hola <strong>${nombre}</strong>,</p>
-    <p>Recibimos tu inscripción al <strong>${event.name}</strong>. 🎉</p>
+    <p>Hola <strong>${escapeHtml(nombre)}</strong>,</p>
+    <p>Recibimos tu inscripción al <strong>${escapeHtml(event.name)}</strong>. 🎉</p>
     <p>Tu pago está <strong>pendiente de verificación</strong>: la organización
     revisará el comprobante y, al confirmarlo, te llegará un segundo correo
     con ${queRecibira}.</p>
@@ -163,13 +163,14 @@ export function correoConfirmadaHtml(
   return emailShell(
     event,
     `
-    <p>Hola <strong>${nombre}</strong>,</p>
+    <p>Hola <strong>${escapeHtml(nombre)}</strong>,</p>
     <p>¡Tu pago fue verificado y tu inscripción al
-    <strong>${event.name}</strong> está <strong>confirmada</strong>! 🏁</p>
+    <strong>${escapeHtml(event.name)}</strong> está <strong>confirmada</strong>! 🏁</p>
     ${
       referencia
-        ? `<p style="margin:20px 0">Tu ${referencia.label.toLowerCase()}:</p>
-           <p style="margin:0 0 20px;font-size:40px;font-weight:bold;color:${primary};border:2px solid ${primary};display:inline-block;padding:8px 28px;border-radius:4px">${referencia.value}</p>`
+        ? // El valor puede ser la placa, que la escribe el participante
+          `<p style="margin:20px 0">Tu ${escapeHtml(referencia.label.toLowerCase())}:</p>
+           <p style="margin:0 0 20px;font-size:40px;font-weight:bold;color:${primary};border:2px solid ${primary};display:inline-block;padding:8px 28px;border-radius:4px">${escapeHtml(referencia.value)}</p>`
         : ""
     }
     <p>Adjuntamos tu <strong>inscripción definitiva en PDF</strong> con tu
@@ -191,16 +192,21 @@ export function correoRechazoHtml(
   motivo: string | null | undefined,
 ): string {
   const { primary, primaryContrast } = event.theme.colors;
-  const whatsappHref = waLink(
-    event.whatsapp.phone,
-    `Hola, quiero corregir mi inscripción al ${event.name}. Mi nombre es: ${nombre}`,
+  // El nombre entra aquí SIN escapar a propósito: waLink lo pasa por
+  // encodeURIComponent, que es el escape que corresponde a una URL. Lo que
+  // sí se escapa es el href ya armado, porque va dentro de un atributo HTML.
+  const whatsappHref = escapeHtml(
+    waLink(
+      event.whatsapp.phone,
+      `Hola, quiero corregir mi inscripción al ${event.name}. Mi nombre es: ${nombre}`,
+    ),
   );
 
   return emailShell(
     event,
     `
-    <p>Hola <strong>${nombre}</strong>,</p>
-    <p>Revisamos tu inscripción al <strong>${event.name}</strong> y
+    <p>Hola <strong>${escapeHtml(nombre)}</strong>,</p>
+    <p>Revisamos tu inscripción al <strong>${escapeHtml(event.name)}</strong> y
     <strong>todavía no pudimos verificar tu pago</strong>. Tu cupo no está
     perdido: en la mayoría de los casos se resuelve reenviando el
     comprobante correcto.</p>
@@ -208,7 +214,7 @@ export function correoRechazoHtml(
       motivo
         ? `<div style="margin:20px 0;padding:16px;border-left:4px solid ${primary};background:#f7f7f7">
              <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#666">Qué necesitamos</p>
-             <p style="margin:0"><strong>${motivo}</strong></p>
+             <p style="margin:0"><strong>${escapeHtml(motivo)}</strong></p>
            </div>`
         : `<p style="margin:20px 0"><strong>Escríbenos y te indicamos qué
              falta para completar tu inscripción.</strong></p>`
