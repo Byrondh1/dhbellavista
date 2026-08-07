@@ -253,6 +253,8 @@ export function avisoOrganizadorHtml(
     telefono?: string | null;
     identificador?: { label: string; value: string } | null;
     categoria?: string | null;
+    /** Lleno = el vehículo va con dos, y el kit de alimentación es doble */
+    copiloto?: string | null;
   },
   fichaUrl: string,
 ): string {
@@ -269,7 +271,13 @@ export function avisoOrganizadorHtml(
       ${filaDato("Teléfono", datos.telefono)}
       ${datos.identificador ? filaDato(datos.identificador.label, datos.identificador.value) : ""}
       ${filaDato("Categoría", datos.categoria)}
+      ${filaDato("Copiloto", datos.copiloto)}
     </table>
+    ${
+      datos.copiloto?.trim()
+        ? `<p style="margin:12px 0 0;font-size:13px;color:#666">Van dos personas: cuenta <strong>kit doble</strong> de alimentación.</p>`
+        : ""
+    }
 
     <p style="margin:24px 0 8px">El pago está <strong>pendiente de
     verificación</strong>. Revisa el comprobante en el panel:</p>

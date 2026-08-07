@@ -253,6 +253,7 @@ export async function enviarAvisoOrganizador(
         telefono: inscripcion.telefono,
         identificador: referenciaDe(event, inscripcion),
         categoria,
+        copiloto: inscripcion.copiloto,
       },
       fichaUrl,
     ),
