@@ -80,7 +80,7 @@ const config: EventConfig = {
       "Ecuador",
       "travesía",
     ],
-    ogImagePath: "/og/og-rodada-angelena.jpg",
+    ogImagePath: "/events/rodada-angelena-4x4-2026/og-rodada-angelena.jpg",
     ogImageAlt: "Rodada Angeleña 4x4 2026 — Desafío Razococha",
   },
 
