@@ -275,6 +275,12 @@ export interface EventConfig {
     description: string;
     /** Ruta pública, ej. "/events/<slug>/og.jpg" (1200×630, <300 KB) */
     ogImagePath?: string;
+    /**
+     * Texto alternativo del OG. Sin definir se usa el nombre del evento, que
+     * es lo correcto cuando el afiche solo lleva ese nombre; se define cuando
+     * la imagen dice algo más que conviene describir.
+     */
+    ogImageAlt?: string;
     keywords?: string[];
   };
   whatsapp: {

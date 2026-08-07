@@ -5,7 +5,7 @@ import { getSiteUrl } from "./site-url";
 /** Metadata base del evento (se enriquece con JSON-LD en la página) */
 export function buildMetadata(config: EventConfig): Metadata {
   const siteUrl = getSiteUrl(config);
-  const { title, description, ogImagePath, keywords } = config.seo;
+  const { title, description, ogImagePath, ogImageAlt, keywords } = config.seo;
 
   return {
     metadataBase: new URL(siteUrl),
@@ -21,7 +21,14 @@ export function buildMetadata(config: EventConfig): Metadata {
       locale: "es_EC",
       type: "website",
       ...(ogImagePath && {
-        images: [{ url: ogImagePath, width: 1200, height: 630, alt: config.name }],
+        images: [
+          {
+            url: ogImagePath,
+            width: 1200,
+            height: 630,
+            alt: ogImageAlt ?? config.name,
+          },
+        ],
       }),
     },
     twitter: {

@@ -57,7 +57,11 @@ const config: EventConfig = {
   },
 
   site: {
-    // domain: "rodada4x4.<dominio-ebcorp>", // se define al comprar el dominio
+    // De aquí sale metadataBase, y de metadataBase salen las URL absolutas
+    // del og:image. WhatsApp y Facebook descartan una imagen declarada con
+    // ruta relativa, así que sin este dominio la tarjeta sale sin foto.
+    // Ojo: NEXT_PUBLIC_SITE_URL, si está puesta en Vercel, manda sobre esto.
+    domain: "angelena.ebcorp.dev",
     // gaId: "G-XXXXXXX",
     themeColor: "#111111",
   },
@@ -76,8 +80,8 @@ const config: EventConfig = {
       "Ecuador",
       "travesía",
     ],
-    // PENDIENTE: afiche del evento (1200×630, <300 KB)
-    ogImagePath: "/events/rodada-angelena-4x4-2026/og.png",
+    ogImagePath: "/og/og-rodada-angelena.jpg",
+    ogImageAlt: "Rodada Angeleña 4x4 2026 — Desafío Razococha",
   },
 
   whatsapp: {
