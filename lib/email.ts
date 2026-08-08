@@ -12,6 +12,38 @@ export interface EmailResult {
 }
 
 /**
+ * La dirección de desvío de pruebas, o undefined si no corresponde desviar.
+ *
+ * En producción SIEMPRE devuelve undefined, por más que la variable esté
+ * puesta. Esto ya pasó de verdad: con EMAIL_TEST_REDIRECT activa en el
+ * Production de Vercel, ningún participante recibió su correo —todos, con su
+ * PDF y su QR, se fueron a una sola bandeja— y desde el panel no se notaba,
+ * porque Resend los aceptaba y el timestamp de enviado se marcaba igual.
+ *
+ * Se mira VERCEL_ENV y no NODE_ENV: NODE_ENV también vale "production" en los
+ * builds de Preview, donde el desvío sí es lo que se quiere. VERCEL_ENV la
+ * pone Vercel sola ("production" | "preview" | "development") y no existe en
+ * local, así que ahí el desvío sigue funcionando como siempre.
+ */
+function redirectDePruebas(): string | undefined {
+  const valor = process.env.EMAIL_TEST_REDIRECT?.trim();
+  if (!valor) return undefined;
+
+  if (process.env.VERCEL_ENV === "production") {
+    // Ruidoso a propósito, en cada envío: es una configuración que no debería
+    // existir en producción y conviene que salte a la vista en los logs.
+    logError(
+      `EMAIL_TEST_REDIRECT está puesta en PRODUCCIÓN (→ ${valor}). Se ignora: ` +
+        `el correo sale al destinatario real. Quita esa variable del entorno ` +
+        `Production en Vercel y vuelve a desplegar.`,
+    );
+    return undefined;
+  }
+
+  return valor;
+}
+
+/**
  * Envío de correos del módulo de inscripciones (Resend).
  *
  * Contrato: NUNCA lanza. Devuelve { sent, reason } y loguea cada etapa —
@@ -24,7 +56,8 @@ export interface EmailResult {
  *
  * EMAIL_TEST_REDIRECT: si está definida, TODO correo se desvía a esa
  * dirección y el destinatario original se antepone al asunto — para probar
- * sin escribirle a participantes reales.
+ * sin escribirle a participantes reales. En producción se ignora siempre
+ * (ver redirectDePruebas).
  */
 export async function sendEventEmail({
   event,
@@ -59,7 +92,7 @@ export async function sendEventEmail({
     return { sent: false, reason };
   }
 
-  const redirect = process.env.EMAIL_TEST_REDIRECT;
+  const redirect = redirectDePruebas();
   const destino = redirect ?? to;
   const replyTo = replyToOverride ?? event.sections.contact?.email;
 
