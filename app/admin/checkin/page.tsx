@@ -4,11 +4,13 @@ import { redirect } from "next/navigation";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import { verifyCheckinToken } from "@/lib/qr-token";
-import type { InscripcionRow } from "@/lib/inscripciones";
+import { debeCobrarse, type InscripcionRow } from "@/lib/inscripciones";
 import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
 import { EstadoBadge } from "@/components/admin/EstadoBadge";
 import { CheckinButton } from "@/components/admin/CheckinButton";
+import { CobroButton } from "@/components/admin/CobroButton";
+import { leerMontoEvento } from "@/lib/datos-pago";
 
 export const metadata: Metadata = {
   title: "Check-in",
@@ -87,8 +89,28 @@ export default async function CheckinPage({
         row.categoria)
       : null;
 
+  // Se lee ahora, no del token: así el aviso refleja el estado de pago de
+  // este instante. Si alguien paga y se marca cobrado, el MISMO QR deja de
+  // avisar sin tener que reemitir nada.
+  const cobrar = debeCobrarse(row);
+  const monto = cobrar ? await leerMontoEvento(supabase, event.slug) : null;
+
   return (
     <Shell>
+      {cobrar && (
+        <div className="mb-4 rounded-brand border-4 border-warning bg-warning p-5 text-center text-warning-contrast">
+          <p className="text-2xl leading-tight font-bold uppercase">
+            ⚠ Pago pendiente
+          </p>
+          <p className="mt-1 text-lg font-bold uppercase">
+            Cobrar antes de entregar el kit
+          </p>
+          {monto && (
+            <p className="mt-3 text-4xl font-bold tabular-nums">{monto}</p>
+          )}
+        </div>
+      )}
+
       <div className="rounded-brand border border-border bg-surface p-8 text-center">
         <EstadoBadge estado={row.estado} />
         {/* El identificador manda: dorsal en el downhill, placa en la rodada.
@@ -130,7 +152,16 @@ export default async function CheckinPage({
           </p>
         )}
 
-        <div className="mt-8">
+        {/* Un botón por cosa: el pago y la asistencia son independientes.
+            Se puede cobrar sin marcar presente y al revés — el aviso NO
+            bloquea el check-in, solo se hace imposible de ignorar. */}
+        {row.pago_en_sitio && (
+          <div className="mt-8">
+            <CobroButton id={row.id} cobradoAt={row.pago_cobrado_at} />
+          </div>
+        )}
+
+        <div className="mt-4">
           <CheckinButton id={row.id} asistioAt={row.asistio_at} />
         </div>
       </div>

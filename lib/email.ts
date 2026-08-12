@@ -191,14 +191,33 @@ export function correoConfirmadaHtml(
   event: EventConfig,
   nombre: string,
   referencia: { label: string; value: string } | null,
+  /** Pago en efectivo el día del evento: cambia el texto, no el resto */
+  pagoEnSitio?: { monto?: string | null },
 ): string {
   const { primary } = event.theme.colors;
   return emailShell(
     event,
     `
     <p>Hola <strong>${escapeHtml(nombre)}</strong>,</p>
-    <p>¡Tu pago fue verificado y tu inscripción al
-    <strong>${escapeHtml(event.name)}</strong> está <strong>confirmada</strong>! 🏁</p>
+    ${
+      pagoEnSitio
+        ? // Decirle "tu pago fue verificado" a quien todavía debe sería
+          // mentirle, y además le quitaría el aviso de llevar el efectivo.
+          `<p>Tu inscripción al <strong>${escapeHtml(event.name)}</strong> está
+           <strong>confirmada</strong>. 🏁</p>
+           <div style="margin:20px 0;padding:16px;border-left:4px solid #f59e0b;background:#fffbeb">
+             <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#92400e">Pago pendiente</p>
+             <p style="margin:0">Tu pago quedó registrado para cobrarse
+             <strong>en efectivo el día del evento</strong>${
+               pagoEnSitio.monto
+                 ? `: <strong>${escapeHtml(pagoEnSitio.monto)}</strong>`
+                 : ""
+             }. Acércate a la acreditación con el monto exacto antes de retirar
+             tu kit.</p>
+           </div>`
+        : `<p>¡Tu pago fue verificado y tu inscripción al
+           <strong>${escapeHtml(event.name)}</strong> está <strong>confirmada</strong>! 🏁</p>`
+    }
     ${
       referencia
         ? // El valor puede ser la placa, que la escribe el participante

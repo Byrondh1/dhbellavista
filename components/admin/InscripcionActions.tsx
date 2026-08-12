@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Accion = "verificar" | "rechazar" | "revertir-verificacion";
+type Accion =
+  | "verificar"
+  | "verificar-pago-en-sitio"
+  | "rechazar"
+  | "revertir-verificacion";
 
 /**
  * Acciones del detalle de una inscripción (verificar / rechazar / revertir).
@@ -49,7 +53,11 @@ export function InscripcionActions({
       // Revertir no envía correos; verificar y rechazar sí.
       if (action !== "revertir-verificacion" && body?.emailSent === false) {
         const queHizo =
-          action === "verificar" ? "Inscripción verificada" : "Inscripción rechazada";
+          action === "rechazar"
+            ? "Inscripción rechazada"
+            : action === "verificar-pago-en-sitio"
+              ? "Confirmada — se cobra en sitio"
+              : "Inscripción verificada";
         setError(
           `${queHizo}, pero el correo NO salió (${body?.emailError ?? "razón desconocida"}). Revisa los logs y usa "Reenviar correo".`,
         );
@@ -121,6 +129,28 @@ export function InscripcionActions({
           className="rounded-brand bg-primary px-6 py-3 font-semibold uppercase tracking-wide text-primary-contrast disabled:opacity-60"
         >
           Verificar pago
+        </button>
+        {/* Para quien no puede transferir (típicamente desde Colombia): se
+            confirma igual —dorsal, QR y Correo 2— pero queda marcado para
+            cobrarle en efectivo, y el aviso salta al escanear su QR. */}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            if (
+              window.confirm(
+                "Se confirmará la inscripción SIN haber recibido el pago.\n\n" +
+                  "Recibirá su QR y contará como inscrita, pero al escanearla " +
+                  "en el evento saltará el aviso de cobrar antes de entregar " +
+                  "el kit.\n\n¿Continuar?",
+              )
+            ) {
+              act("verificar-pago-en-sitio");
+            }
+          }}
+          className="rounded-brand border-2 border-warning px-6 py-3 font-semibold uppercase tracking-wide text-warning disabled:opacity-60"
+        >
+          Confirmar — paga en sitio
         </button>
         {estado !== "rechazada" && (
           <button

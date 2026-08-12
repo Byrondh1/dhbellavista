@@ -41,6 +41,12 @@ export async function renderInscripcionPdf(
   inscripcion: PdfInscripcion,
   variant: PdfVariant,
   qrDataUrl?: string,
+  /**
+   * Pago en efectivo el día del evento: añade una banda de aviso al PDF.
+   * Va aquí y no solo en el correo porque en la acreditación mucha gente
+   * enseña el PDF desde el celular y nadie abre el correo que lo trajo.
+   */
+  pagoEnSitio?: { monto?: string | null },
 ): Promise<Buffer> {
   const { primary, primaryContrast } = event.theme.colors;
 
@@ -63,6 +69,26 @@ export async function renderInscripcionPdf(
       textTransform: "uppercase",
     },
     body: { padding: 24 },
+    // Banda de aviso de pago pendiente. Naranja sólido con texto casi negro,
+    // el mismo criterio que en el panel: se lee igual en los dos eventos y
+    // sobrevive a una impresión en blanco y negro, porque el peso visual lo
+    // dan el bloque relleno y la negrita, no el color.
+    // Compacta a propósito: el A5 va justo y una banda alta empujaba el
+    // contenido a una segunda página en blanco.
+    avisoPago: {
+      backgroundColor: "#ea580c",
+      color: "#111111",
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      marginBottom: 10,
+    },
+    avisoPagoTitulo: {
+      fontFamily: "Helvetica-Bold",
+      fontSize: 11,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+    },
+    avisoPagoTexto: { fontSize: 8, marginTop: 2 },
     stamp: {
       alignSelf: "flex-start",
       borderWidth: 2,
@@ -163,6 +189,18 @@ export async function renderInscripcionPdf(
         </View>
 
         <View style={styles.body}>
+          {/* Arriba del todo: es lo primero que tiene que ver quien acredita */}
+          {pagoEnSitio && variant === "definitivo" && (
+            <View style={styles.avisoPago}>
+              <Text style={styles.avisoPagoTitulo}>
+                Pago pendiente{pagoEnSitio.monto ? ` — ${pagoEnSitio.monto}` : ""}
+              </Text>
+              <Text style={styles.avisoPagoTexto}>
+                Cobrar en efectivo antes de entregar el kit.
+              </Text>
+            </View>
+          )}
+
           <Text style={styles.stamp}>
             {variant === "provisional"
               ? "Pendiente de verificación"

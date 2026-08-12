@@ -86,6 +86,12 @@ export async function enviarCorreoRecibida(
 export async function enviarCorreoConfirmada(
   event: EventConfig,
   inscripcion: InscripcionParaCorreo,
+  /**
+   * Presente = el pago se cobra en efectivo el día del evento, así que el
+   * correo no puede decir "tu pago fue verificado". El monto es opcional:
+   * el aviso vale igual sin la cifra.
+   */
+  pagoEnSitio?: { monto?: string | null },
 ): Promise<EmailResult> {
   const datos = validarDatos(inscripcion);
   if (!datos.ok) {
@@ -139,13 +145,21 @@ export async function enviarCorreoConfirmada(
       inscripcion,
       "definitivo",
       qrDataUrl,
+      // El PDF lleva el mismo aviso que el correo: en la acreditación se
+      // enseña el documento, no el mensaje que lo trajo.
+      pagoEnSitio,
     );
     logInfo(`Correo 2: PDF listo (${pdf.length} bytes)`);
     return await sendEventEmail({
       event,
       to: inscripcion.email,
       subject: `¡Inscripción confirmada! — ${event.name}`,
-      html: correoConfirmadaHtml(event, inscripcion.nombre, referencia),
+      html: correoConfirmadaHtml(
+        event,
+        inscripcion.nombre,
+        referencia,
+        pagoEnSitio,
+      ),
       attachments: [{ filename: "inscripcion-definitiva.pdf", content: pdf }],
     });
   } catch (error) {

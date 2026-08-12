@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
-import type { InscripcionRow } from "@/lib/inscripciones";
+import { debeCobrarse, type InscripcionRow } from "@/lib/inscripciones";
 import { Container } from "@/components/ui/Container";
 import { AsistenciaToggle } from "@/components/admin/AsistenciaToggle";
 import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
@@ -260,6 +260,13 @@ export default async function AsistenciaPage({
                   {refDe(row, ident) ?? "—"}
                 </span>
                 <div className="min-w-0 flex-1">
+                  {/* Antes que nada: si esta persona debe, tiene que verse
+                      aunque se acredite desde la lista y no escaneando */}
+                  {debeCobrarse(row) && (
+                    <span className="mb-1 inline-block rounded-brand bg-warning px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-warning-contrast">
+                      ⚠ Cobrar
+                    </span>
+                  )}
                   <Link
                     href={`/admin/inscripciones/${row.id}`}
                     // Sin truncar: con la placa ocupando su ancho, en el
