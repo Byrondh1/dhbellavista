@@ -10,6 +10,7 @@ import {
   refDe,
   usaCategorias,
 } from "@/lib/identificador";
+import { signCheckinToken } from "@/lib/qr-token";
 import { Container } from "@/components/ui/Container";
 import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
@@ -51,6 +52,18 @@ export default async function InscripcionDetailPage({
 
   const ident = identificadorDe(event);
   const referencia = refDe(row, ident);
+
+  // Mismo token firmado que lleva el QR del PDF: la pantalla de check-in no
+  // distingue si se llegó escaneando o desde aquí. Solo tiene sentido en las
+  // verificadas, que son las únicas que esa pantalla admite. Sin QR_SECRET
+  // el token es null y el enlace no se muestra, igual que el QR no se genera.
+  const checkinToken =
+    row.estado === "verificada" && referencia
+      ? signCheckinToken({ id: row.id, slug: event.slug, ref: referencia })
+      : null;
+  const checkinHref = checkinToken
+    ? `/admin/checkin?t=${encodeURIComponent(checkinToken)}`
+    : null;
   const categoryName = row.categoria
     ? (event.categories.find((c) => c.id === row.categoria)?.name ?? row.categoria)
     : null;
@@ -111,6 +124,21 @@ export default async function InscripcionDetailPage({
             )}
           </div>
         </div>
+
+        {/* El día del evento no siempre hay QR que escanear: teléfono muerto,
+            PDF perdido, código que no lee. Este enlace abre la MISMA pantalla
+            de check-in sin depender de la cámara.
+            Ruta relativa a propósito: así funciona en el dominio donde estés
+            (producción o preview), a diferencia del QR, que lleva el dominio
+            de producción cocido dentro. */}
+        {checkinHref && (
+          <Link
+            href={checkinHref}
+            className="mb-8 inline-flex items-center gap-2 rounded-brand border-2 border-primary px-5 py-3 font-semibold uppercase tracking-wide text-primary hover:bg-primary hover:text-primary-contrast"
+          >
+            Abrir check-in
+          </Link>
+        )}
 
         <dl className="mb-8 grid gap-4 sm:grid-cols-2">
           {fields.map(({ label, value }) => (

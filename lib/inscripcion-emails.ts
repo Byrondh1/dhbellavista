@@ -145,6 +145,9 @@ export async function enviarCorreoConfirmada(
       inscripcion,
       "definitivo",
       qrDataUrl,
+      // El PDF lleva el mismo aviso que el correo: en la acreditación se
+      // enseña el documento, no el mensaje que lo trajo.
+      pagoEnSitio,
     );
     logInfo(`Correo 2: PDF listo (${pdf.length} bytes)`);
     return await sendEventEmail({
