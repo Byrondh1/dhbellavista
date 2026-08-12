@@ -11,7 +11,7 @@ import {
   usaCategorias,
 } from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
-import { EstadoBadge } from "@/components/admin/EstadoBadge";
+import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
 import { ReenviarCorreoButton } from "@/components/admin/ReenviarCorreoButton";
 
@@ -103,6 +103,7 @@ export default async function InscripcionDetailPage({
           <h1 className="text-3xl font-bold uppercase">{row.nombre}</h1>
           <div className="flex items-center gap-3">
             <EstadoBadge estado={row.estado} />
+            <CobroBadge row={row} />
             {referencia && (
               <span className="rounded-brand bg-primary px-3 py-1 text-lg font-bold text-primary-contrast">
                 {ident.tipo === "dorsal" ? `#${referencia}` : referencia}

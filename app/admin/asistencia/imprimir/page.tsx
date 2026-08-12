@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
-import type { InscripcionRow } from "@/lib/inscripciones";
+import { debeCobrarse, type InscripcionRow } from "@/lib/inscripciones";
 import { BotonImprimir } from "@/components/admin/BotonImprimir";
 import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 
@@ -179,6 +179,13 @@ export default async function ImprimirAsistenciaPage() {
                         {refDe(r, ident) ?? "—"}
                       </td>
                       <td className="border border-black p-1 font-medium">
+                        {/* En papel no hay color fiable: el aviso va en texto,
+                            en negrita y delante del nombre */}
+                        {debeCobrarse(r) ? (
+                          <span className="mr-1 border-2 border-black px-1 font-bold">
+                            ⚠ COBRAR
+                          </span>
+                        ) : null}
                         {r.nombre}
                         {r.club ? (
                           <span className="font-normal"> · {r.club}</span>

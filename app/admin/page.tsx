@@ -9,7 +9,7 @@ import { rowToEstadoInscripciones } from "@/lib/estado-inscripciones";
 import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
 import { LogoutButton } from "@/components/admin/LogoutButton";
-import { EstadoBadge } from "@/components/admin/EstadoBadge";
+import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
 
 export const metadata: Metadata = {
   title: "Panel de inscripciones",
@@ -230,6 +230,7 @@ export default async function AdminPage({
                     <td className="p-3 text-muted">{row.telefono}</td>
                     <td className="p-3">
                       <EstadoBadge estado={row.estado} />
+                      <CobroBadge row={row} />
                     </td>
                     <td className="p-3 font-bold text-primary">
                       {refDe(row, ident) ?? "—"}

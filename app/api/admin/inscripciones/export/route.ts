@@ -67,6 +67,8 @@ export async function GET() {
       ...(clasifica ? ["Categoría"] : []),
       ...(cuentaKits ? ["Copiloto", "Kits"] : []),
       "Estado",
+      "Pago en sitio",
+      "Cobrado el",
       "Presente",
       "Hora de llegada",
       "Correo",
@@ -94,6 +96,9 @@ export async function GET() {
       // "Kits" numérico para poder sumar la columna en la hoja
       ...(cuentaKits ? [r.copiloto ?? "", r.copiloto ? "2" : "1"] : []),
       r.estado,
+      // Tres estados distinguibles al filtrar la hoja para cuadrar la caja
+      r.pago_en_sitio ? (r.pago_cobrado_at ? "Cobrado" : "PENDIENTE") : "",
+      csvFecha(r.pago_cobrado_at),
       r.asistio_at ? "Sí" : "No",
       csvFecha(r.asistio_at),
       r.email,

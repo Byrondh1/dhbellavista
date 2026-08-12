@@ -27,8 +27,27 @@ export interface InscripcionRow {
   correo_confirmada_at: string | null;
   correo_rechazo_at: string | null;
   asistio_at: string | null;
+  /**
+   * Confirmada sin pago recibido: se cobra en efectivo el día del evento
+   * (migración 0009). Ortogonal a `estado`, que sigue siendo 'verificada'.
+   */
+  pago_en_sitio: boolean;
+  /** Cuándo se cobró en sitio. Null con pago_en_sitio = todavía debe. */
+  pago_cobrado_at: string | null;
   /** Evidencia LOPDP: cuándo aceptó el tratamiento de datos */
   consentimiento_at: string | null;
+}
+
+/**
+ * ¿Hay que cobrarle a esta persona antes de entregarle el kit?
+ *
+ * Único punto de decisión: lo consultan el check-in, la lista de asistencia,
+ * el panel y el CSV, para que la regla no se escriba distinta en cada sitio.
+ */
+export function debeCobrarse(
+  row: Pick<InscripcionRow, "pago_en_sitio" | "pago_cobrado_at">,
+): boolean {
+  return row.pago_en_sitio && !row.pago_cobrado_at;
 }
 
 export const ESTADO_LABELS: Record<InscripcionRow["estado"], string> = {

@@ -15,6 +15,21 @@
   --color-muted: var(--c-text-muted);
   --color-border: var(--c-border);
 
+  /*
+   * Aviso. NO sale del tema del evento a propósito: es el único color con un
+   * significado propio ("ojo con esto") y tiene que leerse igual en los dos
+   * sitios. Usar `primary` no serviría — en la rodada es dorado, que ya se
+   * lee como advertencia y se confundiría con el resto de la marca; en el
+   * downhill es rojo, que se lee como error. Se usa solo en el panel.
+   *
+   * Naranja y no ámbar: el ámbar (#f59e0b) queda a un pelo del dorado de la
+   * rodada (#F2B705) y los botones se volvían indistinguibles. Este tono se
+   * separa del dorado y también del rojo del downhill (#CC2200). Texto casi
+   * negro encima, que da 6:1 de contraste — el blanco no llega a 3.5:1.
+   */
+  --color-warning: #ea580c;
+  --color-warning-contrast: #111111;
+
   --radius-brand: var(--radius-brand);
 
   --font-sans: var(--font-geist-sans);

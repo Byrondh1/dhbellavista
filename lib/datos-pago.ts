@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 /**
  * Datos bancarios del evento, mostrados como primer paso del modal de
  * inscripción. Se editan desde /admin/configuracion y viven en Supabase
@@ -94,4 +96,31 @@ export function datosPagoToRow(
     intro: datos.intro || null,
     notas: datos.notas,
   };
+}
+
+/**
+ * Solo el monto del evento, para quien necesita decir "cóbrale $X" sin
+ * cargar el resto de los datos bancarios: el aviso de pago en sitio del
+ * check-in y el Correo 2 de esos casos.
+ *
+ * Devuelve null si no hay fila, si la 0006 no se ejecutó o si el monto está
+ * en blanco. Quien llama debe funcionar igual sin monto: es un dato de ayuda,
+ * no un requisito — el aviso importa aunque no sepamos la cifra.
+ */
+export async function leerMontoEvento(
+  supabase: SupabaseClient,
+  eventSlug: string,
+): Promise<string | null> {
+  try {
+    const { data } = await supabase
+      .from("evento_datos_pago")
+      .select("monto")
+      .eq("event_slug", eventSlug)
+      .maybeSingle();
+    const monto = (data as { monto?: string } | null)?.monto?.trim();
+    return monto ? monto : null;
+  } catch {
+    // Un fallo aquí no puede tumbar un correo ni una pantalla de check-in
+    return null;
+  }
 }

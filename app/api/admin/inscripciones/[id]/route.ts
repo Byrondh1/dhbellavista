@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
-import type { InscripcionRow } from "@/lib/inscripciones";
+import { debeCobrarse, type InscripcionRow } from "@/lib/inscripciones";
 import {
   enviarCorreoConfirmada,
   enviarCorreoRechazo,
@@ -12,16 +12,22 @@ import {
   rowParaCorreo,
 } from "@/lib/inscripcion-emails";
 import { asignaDorsal, refDe, identificadorDe } from "@/lib/identificador";
+import { leerMontoEvento } from "@/lib/datos-pago";
 import { describeError, logError, logInfo, logWarn } from "@/lib/logger";
 
 const actionSchema = z.object({
   action: z.enum([
     "verificar",
+    // Confirma igual que "verificar" (dorsal, QR, Correo 2) pero deja marcado
+    // que el pago se cobra en efectivo el día del evento
+    "verificar-pago-en-sitio",
     "revertir-verificacion",
     "rechazar",
     "reenviar-correo",
     "checkin",
     "deshacer-checkin",
+    "marcar-cobrado",
+    "deshacer-cobrado",
   ]),
   motivo: z.string().trim().max(300).optional(),
 });
@@ -103,7 +109,13 @@ export async function POST(
 
   try {
     switch (action) {
-      case "verificar": {
+      case "verificar":
+      case "verificar-pago-en-sitio": {
+        // Las dos confirman igual —misma RPC, mismo dorsal, mismo QR, mismo
+        // Correo 2—; lo único que cambia es que una deja marcado que el pago
+        // se cobra en efectivo el día del evento.
+        const enSitio = action === "verificar-pago-en-sitio";
+
         // p_con_dorsal explícito: en los eventos identificados por placa
         // verificar solo confirma, no numera nada (migración 0008).
         const { data: rpcData, error } = await supabase.rpc(
@@ -117,6 +129,19 @@ export async function POST(
             ? Object.keys(rpcData as object)
             : rpcData,
         );
+
+        // Antes de la re-lectura, para que el Correo 2 salga con el texto que
+        // corresponde. La acción "verificar" normal NO toca estas columnas:
+        // así el flujo de transferencia queda exactamente como estaba.
+        if (enSitio) {
+          const { error: marcaError } = await supabase
+            .from("inscripciones")
+            .update({ pago_en_sitio: true })
+            .eq("id", id)
+            .eq("event_slug", event.slug);
+          if (marcaError) throw marcaError;
+          logInfo(`Inscripción ${id} marcada como pago en sitio`);
+        }
 
         // No se confía en la forma que devuelve la RPC (composite type): la
         // fuente autoritativa para el correo es una re-lectura de la fila.
@@ -158,6 +183,9 @@ export async function POST(
         const { sent, reason } = await enviarCorreoConfirmada(
           event,
           rowParaCorreo(updated),
+          updated.pago_en_sitio
+            ? { monto: await leerMontoEvento(supabase, event.slug) }
+            : undefined,
         );
         let emailError = reason;
         if (sent) {
@@ -191,6 +219,11 @@ export async function POST(
             verificada_at: null,
             correo_confirmada_at: null,
             asistio_at: null,
+            // Se limpian juntas y en este orden lógico: la restricción de la
+            // 0009 no admite un cobro registrado sin la marca que lo explica.
+            pago_en_sitio: false,
+            pago_cobrado_at: null,
+            pago_cobrado_por: null,
           })
           .eq("id", id)
           .eq("event_slug", event.slug)
@@ -275,7 +308,16 @@ export async function POST(
           verificada: {
             etiqueta: "Correo 2",
             columna: "correo_confirmada_at" as const,
-            enviar: () => enviarCorreoConfirmada(event, rowParaCorreo(row)),
+            enviar: async () =>
+              enviarCorreoConfirmada(
+                event,
+                rowParaCorreo(row),
+                // El reenvío tiene que reflejar el estado de pago de HOY: si
+                // ya se le cobró, el correo vuelve a ser el normal.
+                debeCobrarse(row)
+                  ? { monto: await leerMontoEvento(supabase, event.slug) }
+                  : undefined,
+              ),
           },
           rechazada: {
             etiqueta: "correo de rechazo",
@@ -349,6 +391,58 @@ export async function POST(
         if (error) throw error;
         logInfo(`Check-in deshecho para ${id} (${ident.label} ${refDe(row, ident) ?? "—"})`);
         return NextResponse.json({ ok: true, asistio_at: null });
+      }
+
+      case "marcar-cobrado": {
+        if (!row.pago_en_sitio) {
+          return NextResponse.json(
+            { error: "Esta inscripción no está marcada como pago en sitio." },
+            { status: 409 },
+          );
+        }
+        if (row.pago_cobrado_at) {
+          // Idempotente: dos personas en la puerta pueden tocar el botón
+          return NextResponse.json({
+            ok: true,
+            yaCobrado: true,
+            pago_cobrado_at: row.pago_cobrado_at,
+          });
+        }
+        const { data: updated, error } = await supabase
+          .from("inscripciones")
+          .update({
+            pago_cobrado_at: new Date().toISOString(),
+            // Queda quién cobró, para poder cuadrar la caja después
+            pago_cobrado_por: user.id,
+          })
+          .eq("id", id)
+          .eq("event_slug", event.slug)
+          .select()
+          .single();
+        if (error) throw error;
+        logInfo(
+          `Pago en sitio cobrado en ${id} (${ident.label} ${refDe(row, ident) ?? "—"}) por ${user.id}`,
+        );
+        return NextResponse.json({
+          ok: true,
+          yaCobrado: false,
+          pago_cobrado_at: (updated as InscripcionRow).pago_cobrado_at,
+        });
+      }
+
+      case "deshacer-cobrado": {
+        // Para corregir un toque equivocado en plena acreditación
+        if (!row.pago_cobrado_at) {
+          return NextResponse.json({ ok: true, pago_cobrado_at: null });
+        }
+        const { error } = await supabase
+          .from("inscripciones")
+          .update({ pago_cobrado_at: null, pago_cobrado_por: null })
+          .eq("id", id)
+          .eq("event_slug", event.slug);
+        if (error) throw error;
+        logWarn(`Cobro en sitio deshecho en ${id} por ${user.id}`);
+        return NextResponse.json({ ok: true, pago_cobrado_at: null });
       }
     }
   } catch (error) {
