@@ -88,6 +88,10 @@ const config: EventConfig = {
     phone: "593961699925",
     registrationMessage:
       "Hola, quiero inscribirme a la Rodada Angeleña 4x4 2026. Mi nombre es: ",
+    // Lo manda la organización desde el panel al confirmar una inscripción.
+    // Repite fecha, hora y lugar: si cambian arriba, cambiarlos aquí también.
+    confirmationMessage:
+      "✅ ¡Pago confirmado e inscripción realizada! 🚙 Ya eres parte de la Rodada Angeleña 4x4 — travesía a las Lagunas de Razococha (sábado 5 de septiembre, salida 08:00 desde el Parque Central de El Ángel). Ahora pásanos 2 o 3 fotos de tu 4x4 para presumir tu máquina en nuestro Facebook 🔥 Incluye tu nombre, club/ciudad y tu Facebook para etiquetarte.",
     // communityInviteUrl: "https://chat.whatsapp.com/...",
   },
 

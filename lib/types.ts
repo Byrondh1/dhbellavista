@@ -298,6 +298,17 @@ export interface EventConfig {
     phone: string;
     /** Texto pre-llenado del wa.me de inscripción */
     registrationMessage: string;
+    /**
+     * Mensaje que la organización le manda al participante desde el panel,
+     * tocando su teléfono. Va en el config y no en el componente porque el
+     * panel es el mismo para los dos eventos.
+     *
+     * Sin definir, el enlace abre el chat sin texto pre-llenado.
+     *
+     * OJO: si el texto menciona fecha, hora o lugar, esos datos también
+     * viven en `date` y `location`. Al cambiar uno hay que cambiar el otro.
+     */
+    confirmationMessage?: string;
     /** Link de invitación al grupo/comunidad del evento */
     communityInviteUrl?: string;
   };

@@ -13,6 +13,7 @@ import {
 import { signCheckinToken } from "@/lib/qr-token";
 import { Container } from "@/components/ui/Container";
 import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
+import { TelefonoWhatsApp } from "@/components/admin/TelefonoWhatsApp";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
 import { ReenviarCorreoButton } from "@/components/admin/ReenviarCorreoButton";
 
@@ -68,7 +69,11 @@ export default async function InscripcionDetailPage({
     ? (event.categories.find((c) => c.id === row.categoria)?.name ?? row.categoria)
     : null;
 
-  const fields: { label: string; value: string | null }[] = [
+  const fields: {
+    label: string;
+    value: string | null;
+    telefono?: boolean;
+  }[] = [
     { label: "Correo", value: row.email },
     { label: "Cédula", value: row.cedula },
     // La categoría solo se muestra en eventos que clasifican
@@ -88,7 +93,8 @@ export default async function InscripcionDetailPage({
           },
         ]
       : []),
-    { label: "Teléfono", value: row.telefono },
+    // El teléfono se pinta aparte, como enlace de WhatsApp
+    { label: "Teléfono", value: null, telefono: true },
     {
       label: "Contacto de emergencia",
       value: row.emergencia_nombre
@@ -141,7 +147,7 @@ export default async function InscripcionDetailPage({
         )}
 
         <dl className="mb-8 grid gap-4 sm:grid-cols-2">
-          {fields.map(({ label, value }) => (
+          {fields.map(({ label, value, telefono }) => (
             <div
               key={label}
               className="rounded-brand border border-border bg-surface p-4"
@@ -149,7 +155,17 @@ export default async function InscripcionDetailPage({
               <dt className="text-xs uppercase tracking-wider text-muted">
                 {label}
               </dt>
-              <dd className="mt-1 font-medium">{value ?? "—"}</dd>
+              <dd className="mt-1 font-medium">
+                {telefono ? (
+                  <TelefonoWhatsApp
+                    telefono={row.telefono}
+                    nombre={row.nombre}
+                    mensaje={event.whatsapp.confirmationMessage}
+                  />
+                ) : (
+                  (value ?? "—")
+                )}
+              </dd>
             </div>
           ))}
         </dl>

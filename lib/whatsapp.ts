@@ -26,3 +26,31 @@ export function telefonoVisible(phone: string): string {
   const m = d.match(/^593(\d{2})(\d{3})(\d{4})$/);
   return m ? `+593 ${m[1]} ${m[2]} ${m[3]}` : `+${d}`;
 }
+
+/**
+ * Normaliza un número tal como lo escribió el participante y devuelve el
+ * formato que pide wa.me: solo dígitos, con código de país al frente.
+ *
+ * En el formulario la gente escribe de todo: "0987654321", "+593 98 765 4321",
+ * "00593...". Esto lo unifica.
+ *
+ * `pais` mira a Colombia porque parte del público entra desde Ipiales y
+ * Tulcán. Hoy la tabla de inscripciones no guarda país, así que llega
+ * undefined y se asume Ecuador; el día que se agregue esa columna, basta
+ * pasarla aquí.
+ */
+export function toWhatsApp(raw: string, pais?: string | null): string {
+  let n = raw.replace(/\D/g, "");
+
+  // Prefijo internacional marcado a la antigua
+  if (n.startsWith("00")) n = n.slice(2);
+
+  // Ya viene con código de país: no se toca
+  if (n.startsWith("593") || n.startsWith("57")) return n;
+
+  // El 0 del formato nacional no va en el internacional
+  if (n.startsWith("0")) n = n.slice(1);
+
+  const codigo = pais?.trim().toLowerCase() === "colombia" ? "57" : "593";
+  return `${codigo}${n}`;
+}
