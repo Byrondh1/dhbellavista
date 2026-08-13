@@ -11,6 +11,7 @@ import { Container } from "@/components/ui/Container";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
 import { TelefonoWhatsApp } from "@/components/admin/TelefonoWhatsApp";
+import { mensajeConfirmacion } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "Panel de inscripciones",
@@ -232,7 +233,7 @@ export default async function AdminPage({
                       <TelefonoWhatsApp
                         telefono={row.telefono}
                         nombre={row.nombre}
-                        mensaje={event.whatsapp.confirmationMessage}
+                        mensaje={mensajeConfirmacion(event)}
                       />
                     </td>
                     <td className="p-3">

@@ -305,8 +305,9 @@ export interface EventConfig {
      *
      * Sin definir, el enlace abre el chat sin texto pre-llenado.
      *
-     * OJO: si el texto menciona fecha, hora o lugar, esos datos también
-     * viven en `date` y `location`. Al cambiar uno hay que cambiar el otro.
+     * Admite el marcador `{date}`, que se sustituye por la fecha del evento
+     * (derivada de `date.start`) para que el texto no pueda quedar desfasado.
+     * Lo resuelve `mensajeConfirmacion()` en lib/whatsapp.ts.
      */
     confirmationMessage?: string;
     /** Link de invitación al grupo/comunidad del evento */

@@ -14,6 +14,7 @@ import { signCheckinToken } from "@/lib/qr-token";
 import { Container } from "@/components/ui/Container";
 import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
 import { TelefonoWhatsApp } from "@/components/admin/TelefonoWhatsApp";
+import { mensajeConfirmacion } from "@/lib/whatsapp";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
 import { ReenviarCorreoButton } from "@/components/admin/ReenviarCorreoButton";
 
@@ -160,7 +161,7 @@ export default async function InscripcionDetailPage({
                   <TelefonoWhatsApp
                     telefono={row.telefono}
                     nombre={row.nombre}
-                    mensaje={event.whatsapp.confirmationMessage}
+                    mensaje={mensajeConfirmacion(event)}
                   />
                 ) : (
                   (value ?? "—")

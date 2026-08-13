@@ -1,3 +1,5 @@
+import type { EventConfig } from "./types";
+
 /** Construye un link wa.me con mensaje pre-llenado */
 export function waLink(phone: string, message?: string): string {
   const base = `https://wa.me/${phone.replace(/\D/g, "")}`;
@@ -53,4 +55,47 @@ export function toWhatsApp(raw: string, pais?: string | null): string {
 
   const codigo = pais?.trim().toLowerCase() === "colombia" ? "57" : "593";
   return `${codigo}${n}`;
+}
+
+/**
+ * La fecha del evento tal como se lee dentro de una frase:
+ * "sábado 5 de septiembre".
+ *
+ * Sale de `date.start`, que es la fecha real del evento y la única fuente de
+ * verdad. Se formatea en UTC a propósito: `start` es un día sin hora, y
+ * dejarlo al huso del servidor lo correría al día anterior en cualquier zona
+ * al oeste de Greenwich — Ecuador, sin ir más lejos.
+ */
+function fechaEnFrase(isoDate: string): string | null {
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat("es-EC", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  })
+    .format(d)
+    // es-EC mete una coma tras el día de la semana que sobra dentro de la frase
+    .replace(",", "");
+}
+
+/**
+ * El mensaje que la organización manda al participante desde el panel, con
+ * sus marcadores resueltos.
+ *
+ * `{date}` se sustituye por la fecha del evento para que el texto no pueda
+ * quedar desfasado del config. Hora y lugar van escritos en el mensaje: son
+ * datos de la salida, no del evento, y no tienen un campo propio.
+ *
+ * Devuelve undefined si el evento no configuró mensaje — el enlace abre
+ * entonces el chat en blanco.
+ */
+export function mensajeConfirmacion(event: EventConfig): string | undefined {
+  const plantilla = event.whatsapp.confirmationMessage;
+  if (!plantilla) return undefined;
+  const fecha = fechaEnFrase(event.date.start);
+  // Sin fecha utilizable se deja el marcador sin resolver antes que escribir
+  // una fecha inventada: se nota al instante y se corrige.
+  return fecha ? plantilla.replaceAll("{date}", fecha) : plantilla;
 }
