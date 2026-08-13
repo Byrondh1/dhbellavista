@@ -92,8 +92,11 @@ const config: EventConfig = {
     // {date} lo resuelve mensajeConfirmacion() desde date.start, así que
     // cambiar la fecha del evento arriba lo actualiza aquí solo. La hora y el
     // lugar de salida sí van escritos: no tienen campo propio en el config.
+    // Los emojis van como escapes \u y no como glifos: así el texto sobrevive
+    // a que alguien guarde el archivo en una codificación que no sea UTF-8.
+    // \u2705 = check, \uD83D\uDE99 = camioneta, \uD83D\uDD25 = fuego
     confirmationMessage:
-      "✅ ¡Pago confirmado e inscripción realizada! 🚙 Ya eres parte de la Rodada Angeleña 4x4 — travesía a las Lagunas de Razococha ({date}, salida 08:00 desde el Parque Central de El Ángel). Ahora pásanos 2 o 3 fotos de tu 4x4 para presumir tu máquina en nuestro Facebook 🔥 Incluye tu nombre, club/ciudad y tu Facebook para etiquetarte.",
+      "\u2705 ¡Pago confirmado e inscripción realizada! \uD83D\uDE99 Ya eres parte de la Rodada Angeleña 4x4 — travesía a las Lagunas de Razococha ({date}, salida 08:00 desde el Parque Central de El Ángel). Ahora pásanos 2 o 3 fotos de tu 4x4 para presumir tu máquina en nuestro Facebook \uD83D\uDD25 Incluye tu nombre, club/ciudad y tu Facebook para etiquetarte.",
     // communityInviteUrl: "https://chat.whatsapp.com/...",
   },
 
