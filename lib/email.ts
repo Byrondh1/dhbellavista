@@ -175,7 +175,7 @@ export function correoRecibidaHtml(event: EventConfig, nombre: string): string {
     event,
     `
     <p>Hola <strong>${escapeHtml(nombre)}</strong>,</p>
-    <p>Recibimos tu inscripción al <strong>${escapeHtml(event.name)}</strong>. 🎉</p>
+    <p>Recibimos tu inscripción al <strong>${escapeHtml(event.name)}</strong>. \uD83C\uDF89</p>
     <p>Tu pago está <strong>pendiente de verificación</strong>: la organización
     revisará el comprobante y, al confirmarlo, te llegará un segundo correo
     con ${queRecibira}.</p>
@@ -204,7 +204,7 @@ export function correoConfirmadaHtml(
         ? // Decirle "tu pago fue verificado" a quien todavía debe sería
           // mentirle, y además le quitaría el aviso de llevar el efectivo.
           `<p>Tu inscripción al <strong>${escapeHtml(event.name)}</strong> está
-           <strong>confirmada</strong>. 🏁</p>
+           <strong>confirmada</strong>. \uD83C\uDFC1</p>
            <div style="margin:20px 0;padding:16px;border-left:4px solid #f59e0b;background:#fffbeb">
              <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#92400e">Pago pendiente</p>
              <p style="margin:0">Tu pago quedó registrado para cobrarse
@@ -216,7 +216,7 @@ export function correoConfirmadaHtml(
              tu kit.</p>
            </div>`
         : `<p>¡Tu pago fue verificado y tu inscripción al
-           <strong>${escapeHtml(event.name)}</strong> está <strong>confirmada</strong>! 🏁</p>`
+           <strong>${escapeHtml(event.name)}</strong> está <strong>confirmada</strong>! \uD83C\uDFC1</p>`
     }
     ${
       referencia

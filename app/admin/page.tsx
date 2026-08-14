@@ -10,6 +10,8 @@ import { identificadorDe, refDe, usaCategorias } from "@/lib/identificador";
 import { Container } from "@/components/ui/Container";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
+import { TelefonoWhatsApp } from "@/components/admin/TelefonoWhatsApp";
+import { mensajeConfirmacion } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "Panel de inscripciones",
@@ -227,7 +229,13 @@ export default async function AdminPage({
                       <td className="p-3">{categoryName(row.categoria)}</td>
                     )}
                     <td className="p-3 text-muted">{row.ciudad ?? "—"}</td>
-                    <td className="p-3 text-muted">{row.telefono}</td>
+                    <td className="p-3">
+                      <TelefonoWhatsApp
+                        telefono={row.telefono}
+                        nombre={row.nombre}
+                        mensaje={mensajeConfirmacion(event)}
+                      />
+                    </td>
                     <td className="p-3">
                       <EstadoBadge estado={row.estado} />
                       <CobroBadge row={row} />

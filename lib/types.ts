@@ -298,6 +298,18 @@ export interface EventConfig {
     phone: string;
     /** Texto pre-llenado del wa.me de inscripción */
     registrationMessage: string;
+    /**
+     * Mensaje que la organización le manda al participante desde el panel,
+     * tocando su teléfono. Va en el config y no en el componente porque el
+     * panel es el mismo para los dos eventos.
+     *
+     * Sin definir, el enlace abre el chat sin texto pre-llenado.
+     *
+     * Admite el marcador `{date}`, que se sustituye por la fecha del evento
+     * (derivada de `date.start`) para que el texto no pueda quedar desfasado.
+     * Lo resuelve `mensajeConfirmacion()` en lib/whatsapp.ts.
+     */
+    confirmationMessage?: string;
     /** Link de invitación al grupo/comunidad del evento */
     communityInviteUrl?: string;
   };

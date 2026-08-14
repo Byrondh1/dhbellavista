@@ -13,6 +13,8 @@ import {
 import { signCheckinToken } from "@/lib/qr-token";
 import { Container } from "@/components/ui/Container";
 import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
+import { TelefonoWhatsApp } from "@/components/admin/TelefonoWhatsApp";
+import { mensajeConfirmacion } from "@/lib/whatsapp";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
 import { ReenviarCorreoButton } from "@/components/admin/ReenviarCorreoButton";
 import { EditarEmailForm } from "@/components/admin/EditarEmailForm";
@@ -78,7 +80,14 @@ export default async function InscripcionDetailPage({
     rechazada: "el correo de rechazo",
   }[row.estado];
 
-  const fields: { label: string; value: string | null; email?: boolean }[] = [
+  // Dos filas se pintan distinto: el correo lleva su editor debajo y el
+  // teléfono es un enlace de WhatsApp. El resto es etiqueta y valor.
+  const fields: {
+    label: string;
+    value: string | null;
+    telefono?: boolean;
+    email?: boolean;
+  }[] = [
     { label: "Correo", value: row.email, email: true },
     { label: "Cédula", value: row.cedula },
     // La categoría solo se muestra en eventos que clasifican
@@ -98,7 +107,8 @@ export default async function InscripcionDetailPage({
           },
         ]
       : []),
-    { label: "Teléfono", value: row.telefono },
+    // El teléfono se pinta aparte, como enlace de WhatsApp
+    { label: "Teléfono", value: null, telefono: true },
     {
       label: "Contacto de emergencia",
       value: row.emergencia_nombre
@@ -151,7 +161,7 @@ export default async function InscripcionDetailPage({
         )}
 
         <dl className="mb-8 grid gap-4 sm:grid-cols-2">
-          {fields.map(({ label, value, email }) => (
+          {fields.map(({ label, value, telefono, email }) => (
             <div
               key={label}
               className="rounded-brand border border-border bg-surface p-4"
@@ -159,7 +169,17 @@ export default async function InscripcionDetailPage({
               <dt className="text-xs uppercase tracking-wider text-muted">
                 {label}
               </dt>
-              <dd className="mt-1 font-medium break-words">{value ?? "—"}</dd>
+              <dd className="mt-1 font-medium break-words">
+                {telefono ? (
+                  <TelefonoWhatsApp
+                    telefono={row.telefono}
+                    nombre={row.nombre}
+                    mensaje={mensajeConfirmacion(event)}
+                  />
+                ) : (
+                  (value ?? "—")
+                )}
+              </dd>
               {email && (
                 <EditarEmailForm
                   id={row.id}
