@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getActiveEvent } from "@/lib/event";
+import type { EventConfig } from "@/lib/types";
 import { requireAdminUser } from "@/lib/supabase-admin-session";
 import { getSupabaseAdmin } from "@/lib/supabase-server";
 import { debeCobrarse, type InscripcionRow } from "@/lib/inscripciones";
@@ -28,8 +29,18 @@ const actionSchema = z.object({
     "deshacer-checkin",
     "marcar-cobrado",
     "deshacer-cobrado",
+    "editar-email",
+    "eliminar",
   ]),
   motivo: z.string().trim().max(300).optional(),
+  /** Solo para "editar-email". Se normaliza a minúsculas y sin espacios. */
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Ingresa un correo válido")
+    .max(254)
+    .optional(),
 });
 
 /** Marca el timestamp del correo enviado, reportando el error si el write falla */
@@ -50,6 +61,45 @@ async function marcarCorreoEnviado(
   }
   logInfo(`${columna} marcado en ${id}`);
   return undefined;
+}
+
+/**
+ * Qué correo le corresponde a una inscripción según su estado, listo para
+ * enviarse. Lo comparten el reenvío manual y la edición del correo: en los dos
+ * casos la pregunta es la misma y la respuesta no puede divergir.
+ */
+function correoSegunEstado(
+  event: EventConfig,
+  row: InscripcionRow,
+  supabase: SupabaseClient,
+) {
+  return {
+    pendiente: {
+      etiqueta: "Correo 1 (inscripción recibida)",
+      columna: "correo_recibida_at" as const,
+      enviar: () => enviarCorreoRecibida(event, rowParaCorreo(row)),
+    },
+    verificada: {
+      etiqueta: "Correo 2 (confirmada, con QR)",
+      columna: "correo_confirmada_at" as const,
+      enviar: async () =>
+        enviarCorreoConfirmada(
+          event,
+          rowParaCorreo(row),
+          // Refleja el estado de pago de HOY: si ya se le cobró, vuelve a ser
+          // el correo normal.
+          debeCobrarse(row)
+            ? { monto: await leerMontoEvento(supabase, event.slug) }
+            : undefined,
+        ),
+    },
+    rechazada: {
+      etiqueta: "correo de rechazo",
+      columna: "correo_rechazo_at" as const,
+      enviar: () =>
+        enviarCorreoRechazo(event, rowParaCorreo(row), row.rechazo_motivo),
+    },
+  }[row.estado];
 }
 
 /**
@@ -84,7 +134,7 @@ export async function POST(
   if (!parsed.success) {
     return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
   }
-  const { action, motivo } = parsed.data;
+  const { action, motivo, email } = parsed.data;
   logInfo(`Acción admin "${action}" sobre ${id} (${event.slug})`);
 
   // La inscripción debe pertenecer al evento de este sitio
@@ -298,34 +348,7 @@ export async function POST(
       }
 
       case "reenviar-correo": {
-        // El correo que corresponde depende del estado actual
-        const correoPorEstado = {
-          pendiente: {
-            etiqueta: "Correo 1",
-            columna: "correo_recibida_at" as const,
-            enviar: () => enviarCorreoRecibida(event, rowParaCorreo(row)),
-          },
-          verificada: {
-            etiqueta: "Correo 2",
-            columna: "correo_confirmada_at" as const,
-            enviar: async () =>
-              enviarCorreoConfirmada(
-                event,
-                rowParaCorreo(row),
-                // El reenvío tiene que reflejar el estado de pago de HOY: si
-                // ya se le cobró, el correo vuelve a ser el normal.
-                debeCobrarse(row)
-                  ? { monto: await leerMontoEvento(supabase, event.slug) }
-                  : undefined,
-              ),
-          },
-          rechazada: {
-            etiqueta: "correo de rechazo",
-            columna: "correo_rechazo_at" as const,
-            enviar: () =>
-              enviarCorreoRechazo(event, rowParaCorreo(row), row.rechazo_motivo),
-          },
-        }[row.estado];
+        const correoPorEstado = correoSegunEstado(event, row, supabase);
 
         logInfo(
           `Reenviando ${correoPorEstado.etiqueta} de ${id} a ${row.email}`,
@@ -391,6 +414,111 @@ export async function POST(
         if (error) throw error;
         logInfo(`Check-in deshecho para ${id} (${ident.label} ${refDe(row, ident) ?? "—"})`);
         return NextResponse.json({ ok: true, asistio_at: null });
+      }
+
+
+      case "editar-email": {
+        // Corregir un correo mal escrito es la mitad del arreglo: sin reenviar,
+        // la persona sigue sin su PDF ni su QR. Por eso las dos cosas van
+        // juntas en una sola acción.
+        if (!email) {
+          return NextResponse.json(
+            { error: "Falta el correo nuevo." },
+            { status: 400 },
+          );
+        }
+        if (email === row.email.trim().toLowerCase()) {
+          return NextResponse.json({
+            ok: true,
+            sinCambios: true,
+            emailSent: false,
+          });
+        }
+
+        const anterior = row.email;
+        const { error: updateError } = await supabase
+          .from("inscripciones")
+          .update({ email })
+          .eq("id", id)
+          .eq("event_slug", event.slug);
+        if (updateError) throw updateError;
+        logInfo(`Correo de ${id} corregido: ${anterior} → ${email}`);
+
+        // El QR NO depende del correo (el token firma id, evento e
+        // identificador), así que el PDF que ya tenga la persona sigue siendo
+        // válido. Solo hay que hacérselo llegar a la dirección nueva.
+        const filaActualizada: InscripcionRow = { ...row, email };
+        const correo = correoSegunEstado(event, filaActualizada, supabase);
+        logInfo(`Reenviando ${correo.etiqueta} de ${id} al correo nuevo`);
+        const { sent, reason } = await correo.enviar();
+
+        let emailError = reason;
+        if (sent) {
+          emailError = await marcarCorreoEnviado(supabase, id, correo.columna);
+        } else {
+          // El correo corregido YA está guardado: un fallo de Resend no puede
+          // hacer que se pierda el dato bueno. Queda el botón de reenviar.
+          logWarn(
+            `Correo de ${id} guardado, pero el reenvío falló: ${reason ?? "sin razón"}`,
+          );
+        }
+        return NextResponse.json({
+          ok: true,
+          email,
+          etiquetaCorreo: correo.etiqueta,
+          emailSent: sent,
+          ...(emailError && { emailError }),
+        });
+      }
+
+      case "eliminar": {
+        // Borrado real, no anulación: así se liberan la cédula y la placa y la
+        // persona puede volver a inscribirse. Además es lo que corresponde a
+        // la LOPDP, porque aquí se guarda cédula.
+        //
+        // El comprobante va PRIMERO. Si se borrase la fila antes y fallara el
+        // Storage, quedaría un archivo privado con el comprobante de pago de
+        // alguien, huérfano y sin nada que lo referencie.
+        if (row.comprobante_path) {
+          const { error: storageError } = await supabase.storage
+            .from("comprobantes")
+            .remove([row.comprobante_path]);
+          if (storageError) {
+            logError(
+              `No se pudo borrar el comprobante ${row.comprobante_path}; se aborta el borrado de ${id}`,
+              storageError,
+            );
+            return NextResponse.json(
+              {
+                error:
+                  "No se pudo borrar el comprobante del almacenamiento. No se borró nada; intenta de nuevo.",
+              },
+              { status: 502 },
+            );
+          }
+          logInfo(`Comprobante ${row.comprobante_path} borrado`);
+        }
+
+        const { error: deleteError } = await supabase
+          .from("inscripciones")
+          .delete()
+          .eq("id", id)
+          .eq("event_slug", event.slug);
+        if (deleteError) {
+          // Caso feo pero recuperable: el comprobante ya no está y la fila sí.
+          // Se deja dicho en el log para poder pedirlo de nuevo.
+          logError(
+            `La fila ${id} NO se borró y su comprobante (${row.comprobante_path ?? "sin comprobante"}) ya no está`,
+            deleteError,
+          );
+          throw deleteError;
+        }
+
+        logWarn(
+          `Inscripción ELIMINADA: ${id} · ${row.nombre} · ${row.email} · ` +
+            `${ident.label} ${refDe(row, ident) ?? "—"} · estado ${row.estado} · por ${user.id}`,
+        );
+        return NextResponse.json({ ok: true, eliminada: true });
       }
 
       case "marcar-cobrado": {

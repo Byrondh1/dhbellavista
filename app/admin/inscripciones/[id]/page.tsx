@@ -17,6 +17,8 @@ import { TelefonoWhatsApp } from "@/components/admin/TelefonoWhatsApp";
 import { mensajeConfirmacion } from "@/lib/whatsapp";
 import { InscripcionActions } from "@/components/admin/InscripcionActions";
 import { ReenviarCorreoButton } from "@/components/admin/ReenviarCorreoButton";
+import { EditarEmailForm } from "@/components/admin/EditarEmailForm";
+import { EliminarInscripcion } from "@/components/admin/EliminarInscripcion";
 
 export const metadata: Metadata = {
   title: "Detalle de inscripción",
@@ -70,12 +72,23 @@ export default async function InscripcionDetailPage({
     ? (event.categories.find((c) => c.id === row.categoria)?.name ?? row.categoria)
     : null;
 
+  // Qué correo se reenviará al corregir la dirección: lo decide el estado,
+  // igual que en el endpoint.
+  const queCorreoSeEnviara = {
+    pendiente: "Correo 1 (inscripción recibida)",
+    verificada: "Correo 2 (confirmada, con QR)",
+    rechazada: "el correo de rechazo",
+  }[row.estado];
+
+  // Dos filas se pintan distinto: el correo lleva su editor debajo y el
+  // teléfono es un enlace de WhatsApp. El resto es etiqueta y valor.
   const fields: {
     label: string;
     value: string | null;
     telefono?: boolean;
+    email?: boolean;
   }[] = [
-    { label: "Correo", value: row.email },
+    { label: "Correo", value: row.email, email: true },
     { label: "Cédula", value: row.cedula },
     // La categoría solo se muestra en eventos que clasifican
     ...(usaCategorias(event)
@@ -148,7 +161,7 @@ export default async function InscripcionDetailPage({
         )}
 
         <dl className="mb-8 grid gap-4 sm:grid-cols-2">
-          {fields.map(({ label, value, telefono }) => (
+          {fields.map(({ label, value, telefono, email }) => (
             <div
               key={label}
               className="rounded-brand border border-border bg-surface p-4"
@@ -156,7 +169,7 @@ export default async function InscripcionDetailPage({
               <dt className="text-xs uppercase tracking-wider text-muted">
                 {label}
               </dt>
-              <dd className="mt-1 font-medium">
+              <dd className="mt-1 font-medium break-words">
                 {telefono ? (
                   <TelefonoWhatsApp
                     telefono={row.telefono}
@@ -167,6 +180,13 @@ export default async function InscripcionDetailPage({
                   (value ?? "—")
                 )}
               </dd>
+              {email && (
+                <EditarEmailForm
+                  id={row.id}
+                  emailActual={row.email}
+                  queCorreoSeEnviara={queCorreoSeEnviara}
+                />
+              )}
             </div>
           ))}
         </dl>
@@ -272,6 +292,16 @@ export default async function InscripcionDetailPage({
             asignaDorsal={asignaDorsal(event)}
           />
         </section>
+
+        <EliminarInscripcion
+          id={row.id}
+          nombre={row.nombre}
+          estado={row.estado}
+          referencia={referencia}
+          identLabel={ident.label}
+          asistio={Boolean(row.asistio_at)}
+          tieneComprobante={Boolean(row.comprobante_path)}
+        />
       </Container>
     </main>
   );
