@@ -120,8 +120,8 @@ export interface PricingSection {
 
 /**
  * Cómo se identifica a cada inscrito.
- * - "dorsal": número secuencial por categoría que asigna el sistema al
- *   verificar el pago (downhill).
+ * - "dorsal": número que asigna el sistema al confirmar la inscripción, único
+ *   en todo el evento (downhill). Ver `cupoDorsales` para cómo se elige.
  * - "placa": dato que trae el participante en el formulario; la placa del
  *   vehículo hace de código de inscripción (rodada 4x4).
  */
@@ -169,6 +169,17 @@ export interface RegistrationFormConfig {
   identificador: Identificador;
   /** Pedir comprobante de transferencia (imagen o PDF) */
   comprobante: boolean;
+  /**
+   * Cupo duro de dorsales. Definido, el dorsal se SORTEA entre 1 y este
+   * número; al agotarse no se puede confirmar a nadie más. Sin definir, el
+   * dorsal es secuencial (max+1). En los dos casos es único en todo el
+   * evento: desde la migración 0010 el mismo número no se repite entre
+   * categorías.
+   *
+   * Lo aplica verificar_inscripcion tanto al confirmar un pago online como al
+   * alta presencial: el sorteo vive en un solo sitio.
+   */
+  cupoDorsales?: number;
   /**
    * Avisar por correo al club cada vez que entra una inscripción. Va al
    * correo de `sections.contact.email`; sin ese correo no se envía nada.

@@ -100,8 +100,12 @@ const config: EventConfig = {
       placa: false,
       copiloto: false,
     },
-    // El dorsal lo asigna el sistema al verificar el pago, secuencial por categoría
+    // El dorsal lo asigna el sistema al confirmar la inscripción
     identificador: { tipo: "dorsal", label: "Dorsal" },
+    // 100 dorsales sorteados al azar, únicos en todo el evento (el 47 lo
+    // lleva una sola persona, sin importar la categoría). Al agotarse no se
+    // puede confirmar a nadie más, ni online ni en el mostrador.
+    cupoDorsales: 100,
     comprobante: true,
     // Aviso al club por cada inscripción nueva. Ponlo en false si el
     // volumen amenaza el tope diario de Resend: el correo del participante
