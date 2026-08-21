@@ -5,6 +5,7 @@ import {
   avisoOrganizadorHtml,
   correoConfirmadaHtml,
   correoRechazoHtml,
+  correoPresencialHtml,
   correoRecibidaHtml,
   sendEventEmail,
   type EmailResult,
@@ -272,4 +273,75 @@ export async function enviarAvisoOrganizador(
       fichaUrl,
     ),
   });
+}
+
+/**
+ * Correo del alta presencial: pagó en efectivo en el mostrador y se va con su
+ * dorsal en la mano. Lleva el PDF definitivo con QR, igual que el Correo 2,
+ * pero con un texto que dice la verdad sobre cómo pagó. Nunca lanza.
+ */
+export async function enviarCorreoPresencial(
+  event: EventConfig,
+  inscripcion: InscripcionParaCorreo,
+  categoria: string | null,
+): Promise<EmailResult> {
+  const datos = validarDatos(inscripcion);
+  if (!datos.ok) {
+    logError(
+      `Correo presencial omitido (${inscripcion.id}): ${datos.reason}`,
+      inscripcion,
+    );
+    return { sent: false, reason: datos.reason };
+  }
+
+  const referencia = referenciaDe(event, inscripcion);
+
+  // El QR es deseable pero no bloqueante, igual que en el Correo 2: en el
+  // mostrador lo que importa es que el corredor se lleve su número.
+  let qrDataUrl: string | undefined;
+  try {
+    if (referencia) {
+      const token = signCheckinToken({
+        id: inscripcion.id,
+        slug: event.slug,
+        ref: referencia.value,
+      });
+      if (token) {
+        qrDataUrl = await QRCode.toDataURL(
+          `${getSiteUrl(event)}/admin/checkin?t=${token}`,
+          { margin: 1, width: 480, errorCorrectionLevel: "M" },
+        );
+      } else {
+        logWarn(`Presencial (${inscripcion.id}): QR omitido, falta QR_SECRET.`);
+      }
+    }
+  } catch (error) {
+    logError(`Presencial (${inscripcion.id}): fallo generando el QR`, error);
+  }
+
+  try {
+    const pdf = await renderInscripcionPdf(
+      event,
+      inscripcion,
+      "definitivo",
+      qrDataUrl,
+    );
+    logInfo(`Presencial: PDF listo (${pdf.length} bytes) para ${inscripcion.id}`);
+    return await sendEventEmail({
+      event,
+      to: inscripcion.email,
+      subject: `Inscripción confirmada — ${event.name}`,
+      html: correoPresencialHtml(
+        event,
+        inscripcion.nombre,
+        referencia?.value ?? "—",
+        categoria,
+      ),
+      attachments: [{ filename: "inscripcion.pdf", content: pdf }],
+    });
+  } catch (error) {
+    const reason = `pdf-error: ${describeError(error)}`;
+    logError(`Correo presencial falló para ${inscripcion.id}`, error);
+    return { sent: false, reason };
+  }
 }
