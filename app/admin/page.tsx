@@ -99,8 +99,14 @@ export default async function AdminPage({
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/admin/asistencia"
+              href="/admin/inscripcion-presencial"
               className="rounded-brand bg-primary px-4 py-2 text-sm font-semibold uppercase tracking-wide text-primary-contrast"
+            >
+              Inscribir en sitio
+            </Link>
+            <Link
+              href="/admin/asistencia"
+              className="rounded-brand border-2 border-primary px-4 py-2 text-sm font-semibold uppercase tracking-wide text-primary"
             >
               Control de asistencia
             </Link>

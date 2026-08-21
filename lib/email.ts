@@ -350,3 +350,42 @@ export function avisoOrganizadorHtml(
     este mensaje le escribes directamente al participante.</p>`,
   );
 }
+
+/**
+ * Correo del alta presencial: la persona se inscribió en el mostrador el día
+ * del evento y pagó en efectivo ahí mismo.
+ *
+ * Texto propio y no el de confirmación online, porque decirle "verificamos tu
+ * transferencia" a quien acaba de pagar en efectivo delante de ti no tiene
+ * sentido. Lleva su dorsal y su categoría: es la constancia de lo que se le
+ * entregó en mano.
+ */
+export function correoPresencialHtml(
+  event: EventConfig,
+  nombre: string,
+  dorsal: string,
+  categoria: string | null,
+): string {
+  const { primary } = event.theme.colors;
+  return emailShell(
+    event,
+    `
+    <p>Hola <strong>${escapeHtml(nombre)}</strong>,</p>
+    <p>Tu inscripción al <strong>${escapeHtml(event.name)}</strong> quedó
+    <strong>registrada y pagada</strong>.</p>
+    <div style="margin:20px 0;padding:14px 16px;background:#f4f4f4;border-left:4px solid ${primary}">
+      <p style="margin:0;font-size:13px">Pago recibido: <strong>efectivo, en el
+      punto de inscripción</strong>. Este correo es tu comprobante.</p>
+    </div>
+    <p style="margin:20px 0 6px">Tu dorsal:</p>
+    <p style="margin:0 0 20px;font-size:44px;font-weight:bold;color:${primary};border:2px solid ${primary};display:inline-block;padding:6px 30px;border-radius:4px">${escapeHtml(dorsal)}</p>
+    ${
+      categoria
+        ? `<p style="margin:0 0 20px">Categoría: <strong>${escapeHtml(categoria)}</strong></p>`
+        : ""
+    }
+    <p>Adjuntamos tu <strong>inscripción en PDF</strong> con tu código QR:
+    preséntalo en la acreditación.</p>
+    <p>¡Nos vemos en la pista!</p>`,
+  );
+}

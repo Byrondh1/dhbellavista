@@ -12,7 +12,8 @@ import {
   enviarCorreoRecibida,
   rowParaCorreo,
 } from "@/lib/inscripcion-emails";
-import { asignaDorsal, refDe, identificadorDe } from "@/lib/identificador";
+import { refDe, identificadorDe } from "@/lib/identificador";
+import { confirmarInscripcion } from "@/lib/confirmar-inscripcion";
 import { leerMontoEvento } from "@/lib/datos-pago";
 import { describeError, logError, logInfo, logWarn } from "@/lib/logger";
 
@@ -166,19 +167,23 @@ export async function POST(
         // se cobra en efectivo el día del evento.
         const enSitio = action === "verificar-pago-en-sitio";
 
-        // p_con_dorsal explícito: en los eventos identificados por placa
-        // verificar solo confirma, no numera nada (migración 0008).
-        const { data: rpcData, error } = await supabase.rpc(
-          "verificar_inscripcion",
-          { p_id: id, p_con_dorsal: asignaDorsal(event) },
-        );
-        if (error) throw error;
-        logInfo(
-          `RPC verificar_inscripcion devolvió ${Array.isArray(rpcData) ? "array" : typeof rpcData}`,
-          rpcData && typeof rpcData === "object"
-            ? Object.keys(rpcData as object)
-            : rpcData,
-        );
+        // El sorteo del dorsal vive en un solo sitio, compartido con el alta
+        // presencial (lib/confirmar-inscripcion.ts).
+        const confirmacion = await confirmarInscripcion(supabase, event, id);
+        if (!confirmacion.ok) {
+          if (confirmacion.cupoLleno) {
+            logWarn(`No se pudo confirmar ${id}: cupo de dorsales lleno.`);
+            return NextResponse.json(
+              {
+                error:
+                  "No quedan dorsales libres: el cupo del evento está lleno. " +
+                  "Libera uno revirtiendo o eliminando otra inscripción.",
+              },
+              { status: 409 },
+            );
+          }
+          throw confirmacion.error;
+        }
 
         // Antes de la re-lectura, para que el Correo 2 salga con el texto que
         // corresponde. La acción "verificar" normal NO toca estas columnas:

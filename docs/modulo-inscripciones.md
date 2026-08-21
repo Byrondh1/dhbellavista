@@ -9,7 +9,7 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
   (checkbox + texto versionado persistido), rate limiting por IP (hash con
   salt, máx. 5/hora), verificación de magic bytes del comprobante, migración
   0002 con `is_event_admin()` (preparada para multi-tenancy) y
-  `verificar_inscripcion()` (dorsal secuencial por categoría, atómico).
+  `verificar_inscripcion()` (asignación de dorsal atómica).
 - **Fase B — HECHO**: proyecto Supabase real, migraciones ejecutadas,
   usuario admin creado y Downhill en `mode: "modal"`.
 - **Fase C — HECHO**: panel admin (@supabase/ssr, login, lista con filtros,
@@ -55,6 +55,11 @@ Estado de implementación (plan completo aprobado — ver fases A-D):
    `SUPABASE_SERVICE_ROLE_KEY` (Settings → API del proyecto Supabase).
 3. En el config del evento, cambiar `registrationCta.mode` a `"modal"` y
    ajustar `registrationForm` (campos, comprobante, `privacyNote`).
+   Si el evento tiene **cupo duro de dorsales**, definir `cupoDorsales: N`:
+   el dorsal pasa a sortearse entre 1 y N —único en todo el evento— y al
+   agotarse no se puede confirmar a nadie más, ni online ni en el mostrador.
+   Sin definirlo la numeración es secuencial (`max+1`) y no hay tope.
+   Ojo: es un valor del config, así que **cambiarlo exige redesplegar**.
 4. Cargar los datos de pago y abrir las inscripciones en **/admin/configuracion**.
 
 Si Supabase no está configurado y el modo es `"modal"`, el endpoint responde
@@ -76,7 +81,7 @@ registrationForm: {
 
 | | Downhill Bella Vista | Rodada Angeleña 4x4 |
 |---|---|---|
-| Identificador | **Dorsal**, secuencial por categoría, lo asigna el sistema al verificar | **Placa del vehículo**, la trae el participante al inscribirse |
+| Identificador | **Dorsal**, sorteado entre 1 y el cupo, lo asigna el sistema al confirmar | **Placa del vehículo**, la trae el participante al inscribirse |
 | Categorías | Sí (select obligatorio en el formulario) | No (las "modalidades" de la sección pública son informativas) |
 | Campos propios | — | Placa (obligatoria) y copiloto (opcional) |
 
@@ -243,14 +248,54 @@ Dos comportamientos a tener en cuenta:
 - **Revertir no envía ningún correo.** La persona conserva en su bandeja el
   PDF con el dorsal anterior. Si el caso lo amerita, avísale por WhatsApp o
   recházala con un motivo (eso sí manda correo).
-- **El dorsal liberado no se reutiliza**: la numeración siempre toma
-  `max(dorsal)+1` dentro de la categoría, así nunca circulan dos PDFs con el
-  mismo número. Quedan huecos en la secuencia, y está bien.
+- **El dorsal liberado vuelve al bombo.** Con cupo (`cupoDorsales`) el sorteo
+  elige entre los números que están libres en ese instante, así que el que se
+  liberó puede volver a salir. Es lo que se quiere cuando el cupo es duro: si
+  no, revertir una inscripción reduciría el aforo real del evento. La cara B
+  es que el PDF viejo sigue mostrando ese número, así que **revertir exige
+  avisarle a la persona** (ver el punto anterior).
 - El QR viejo se invalida solo: `/admin/checkin` contrasta dorsal y estado
   contra la base, así que muestra "Inscripción no vigente".
 
 Tope del plan gratuito de Resend: 100 correos/día. Si se agota en un pico de
 inscripciones, los correos no enviados se recuperan con el botón de reenviar.
+
+## Inscripción en sitio (mostrador del día del evento)
+
+**`/admin/inscripcion-presencial`** (botón "Inscribir en sitio" en el panel).
+Para quien llega el día de la carrera sin haberse inscrito por la web. En un
+solo POST hace lo que online son tres pasos —inscribirse, pagar, verificar—
+porque en la fila no hay tiempo de volver a una pantalla:
+
+1. Se toman los datos con **el mismo esquema de validación** que el formulario
+   público (`buildRegistrationSchema`), así que se pide exactamente lo mismo.
+2. **Paso intermedio obligatorio: el correo.** Se muestra en grande para
+   leérselo al corredor y que él confirme. En el mostrador se dicta de viva
+   voz y se teclea con prisa, y un correo mal escrito deja a alguien sin PDF y
+   sin QR sin que nadie se entere.
+   `lib/email-typos.ts` detecta además los dominios mal escritos más comunes
+   (`gmail.con`, `hotmial.com`, `gmial.con`…) y **sugiere** la corrección con
+   un botón. Nunca bloquea: un falso positivo que impida inscribir a alguien
+   sería peor que el error que evita.
+3. Se confirma el cobro en efectivo (con el monto de `/admin/configuracion`,
+   si está cargado). La fila nace con `pago_en_sitio = true` y
+   `pago_cobrado_at` ya puesto: el dinero está sobre la mesa en ese momento,
+   así que **no vuelve a aparecer como pendiente de pago** en la acreditación.
+4. Se sortea el dorsal y sale el correo con su PDF y su QR. El texto dice la
+   verdad sobre cómo pagó ("Pago recibido: efectivo, en el punto de
+   inscripción"), no "tu pago fue verificado".
+5. La pantalla termina mostrando **el número a pantalla completa**, para
+   enseñárselo al corredor sin que se acerque a leer.
+
+El sorteo es literalmente el mismo del flujo online: los dos pasan por
+`confirmarInscripcion()` (`lib/confirmar-inscripcion.ts`) → RPC
+`verificar_inscripcion`. Si el cupo está lleno, la RPC falla con `CUPO_LLENO`,
+**se borra la fila recién creada** (no se deja un fantasma ocupando la cédula
+y la placa) y la pantalla lo dice con esas palabras, aclarando que no se cobró
+nada. La página avisa cuántos números quedan antes de empezar a tomar datos.
+
+Esta pantalla **no consulta el candado de inscripciones**: existe justamente
+para cuando las inscripciones online ya están cerradas.
 
 ## Check-in y control de asistencia (día del evento)
 
@@ -268,8 +313,10 @@ celular:
   escaneo equivocado).
 
 Solo aparecen las inscripciones **verificadas**: son las únicas con dorsal.
-Ojo: los dorsales son secuenciales *por categoría*, así que puede haber varios
-"1" — por eso la lista se agrupa por categoría.
+Desde la migración 0010 el dorsal es **único en todo el evento** (antes se
+numeraba por categoría y había varios "1"), así que buscar por número lleva a
+una sola persona. La lista se sigue agrupando por categoría porque es como se
+organiza la salida.
 
 La asistencia también se ve por persona en el detalle de la inscripción
 (sección "Correos y asistencia").
