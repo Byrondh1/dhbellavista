@@ -12,6 +12,7 @@ import { LogoutButton } from "@/components/admin/LogoutButton";
 import { CobroBadge, EstadoBadge } from "@/components/admin/EstadoBadge";
 import { TelefonoWhatsApp } from "@/components/admin/TelefonoWhatsApp";
 import { mensajeConfirmacion } from "@/lib/whatsapp";
+import { usaGrilla } from "@/lib/grilla";
 
 export const metadata: Metadata = {
   title: "Panel de inscripciones",
@@ -110,6 +111,14 @@ export default async function AdminPage({
             >
               Control de asistencia
             </Link>
+            {usaGrilla(event) && (
+              <Link
+                href="/admin/grilla"
+                className="rounded-brand border border-border px-4 py-2 text-sm font-medium text-muted hover:text-foreground"
+              >
+                Grilla de salida
+              </Link>
+            )}
             <Link
               href="/admin/configuracion"
               className="rounded-brand border border-border px-4 py-2 text-sm font-medium text-muted hover:text-foreground"

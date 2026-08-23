@@ -389,3 +389,48 @@ export function correoPresencialHtml(
     <p>¡Nos vemos en la pista!</p>`,
   );
 }
+
+/**
+ * Correo de la grilla de salida: a qué hora le toca bajar.
+ *
+ * Lleva su hora, pero el enlace a la grilla pública va tan arriba como la
+ * hora misma y con el mismo peso visual. Es a propósito: este correo se manda
+ * días antes y el papel de verdad lo hace la página, que refleja cualquier
+ * corrección posterior sin que nadie tenga que reenviar nada. Un corredor que
+ * solo se quede con el correo y no vuelva a mirar es el modo de fallo de esta
+ * función.
+ */
+export function correoGrillaHtml(
+  event: EventConfig,
+  nombre: string,
+  hora: string,
+  categoria: string | null,
+  referencia: { label: string; value: string } | null,
+  urlGrilla: string,
+): string {
+  const { primary } = event.theme.colors;
+  return emailShell(
+    event,
+    `
+    <p>Hola <strong>${escapeHtml(nombre)}</strong>,</p>
+    <p>Ya está la <strong>grilla de salida</strong> del
+    ${escapeHtml(event.name)}. Esta es tu hora:</p>
+    <p style="margin:0 0 6px;font-size:52px;font-weight:bold;line-height:1;color:${primary}">${escapeHtml(hora)}</p>
+    <p style="margin:0 0 20px;font-size:14px;color:#555">
+      ${categoria ? `Categoría <strong>${escapeHtml(categoria)}</strong>` : ""}${
+        categoria && referencia ? " · " : ""
+      }${referencia ? `${escapeHtml(referencia.label)} <strong>${escapeHtml(referencia.value)}</strong>` : ""}
+    </p>
+    <div style="margin:0 0 20px;padding:14px 16px;background:#f4f4f4;border-left:4px solid ${primary}">
+      <p style="margin:0 0 10px;font-size:13px">
+        <strong>Consulta la grilla actualizada</strong> por si hay cambios de
+        último momento: la página siempre manda sobre este correo.
+      </p>
+      <a href="${escapeHtml(urlGrilla)}"
+         style="display:inline-block;background:${primary};color:${escapeHtml(event.theme.colors.primaryContrast)};text-decoration:none;font-weight:bold;padding:10px 20px;border-radius:4px">Ver la grilla de salida</a>
+    </div>
+    <p style="font-size:13px;color:#555">Preséntate en la partida con
+    antelación. Tu minuto es tuyo: si no estás, esa salida queda vacía y el
+    resto de la grilla no se mueve.</p>`,
+  );
+}
