@@ -106,6 +106,9 @@ const config: EventConfig = {
     // lleva una sola persona, sin importar la categoría). Al agotarse no se
     // puede confirmar a nadie más, ni online ni en el mostrador.
     cupoDorsales: 100,
+    // Se baja de a uno: hay grilla de salida con turno sorteado y hora por
+    // corredor (/admin/grilla, y la pública en /grilla).
+    grillaSalida: true,
     comprobante: true,
     // Aviso al club por cada inscripción nueva. Ponlo en false si el
     // volumen amenaza el tope diario de Resend: el correo del participante

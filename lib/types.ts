@@ -181,6 +181,14 @@ export interface RegistrationFormConfig {
    */
   cupoDorsales?: number;
   /**
+   * Grilla de salida: sortear el turno de cada corredor dentro de su
+   * categoría y repartir horas de salida (`/admin/grilla`, migración 0011).
+   *
+   * Solo tiene sentido donde se baja de a uno y hay categorías: el downhill.
+   * Sin definir, la pantalla no existe para el evento.
+   */
+  grillaSalida?: boolean;
+  /**
    * Avisar por correo al club cada vez que entra una inscripción. Va al
    * correo de `sections.contact.email`; sin ese correo no se envía nada.
    *
