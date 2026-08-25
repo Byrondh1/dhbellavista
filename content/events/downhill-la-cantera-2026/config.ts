@@ -207,12 +207,25 @@ const config: EventConfig = {
     },
 
     route: {
-      mode: "embed",
-      // PENDIENTE: iframe de Google My Maps con la bajada dibujada
-      embedUrl: "https://maps.google.com/maps?q=0.6266,-77.9364&z=15&output=embed",
-      // PENDIENTE: distancia, desnivel y altitud reales de la bajada. Sin
-      // datos no se muestran cifras: es preferible a publicar una inventada.
-      stats: {},
+      // Mapa Leaflet sobre OpenStreetMap dibujando el track medido de la
+      // bajada, coloreado por pendiente. El GPX manda: cambiar el archivo
+      // —mismo nombre, misma carpeta— cambia el mapa sin tocar nada más.
+      //
+      // OJO: va en public/, que es lo único que Next sirve por HTTP. Un GPX
+      // en content/ no lo encuentra el navegador y el mapa sale vacío.
+      mode: "gpx",
+      gpxPath: "/events/downhill-la-cantera-2026/recorrido.gpx",
+      allowGpxDownload: true,
+      gpxFileName: "Downhill_Bellavista_2026.gpx",
+      // La partida de la bajada, que no es el centro del pueblo de
+      // location.coordinates: alimenta el botón "cómo llegar a la salida".
+      startPoint: { lat: 0.61422, lng: -77.93039 },
+      stats: {
+        distanceKm: 1.94,
+        dropM: 382,
+        startAltitudeM: 3399,
+        finishAltitudeM: 3030,
+      },
       description:
         "Una bajada de tierra rápida y técnica que termina en el sector del graderío, con saltos y obstáculos. Se reconoce en la mañana y se corre en una sola bajada cronometrada.",
       images: [
