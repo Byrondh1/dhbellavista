@@ -1,4 +1,5 @@
-import type { EventConfig } from "@/lib/types";
+import type { Category, EventConfig } from "@/lib/types";
+import { capitalizar, contarFemenino } from "@/lib/numeros";
 import heroImage from "./images/hero.webp";
 import aboutImage from "./images/about.webp";
 import clubLogo from "./images/logo-club.webp";
@@ -19,6 +20,47 @@ import { galeria } from "./images/galeria";
 // llamarse Bella Vista: es la clave de las inscripciones ya guardadas
 // (event_slug), la ruta de los comprobantes en Storage y el valor de
 // NEXT_PUBLIC_EVENT en Vercel. Renombrarlo es una operación aparte.
+/**
+ * Las categorías del evento, EN EL ORDEN EN QUE SE CORREN. Ese orden no es
+ * decorativo: es el orden de salida por defecto de la grilla.
+ *
+ * Va fuera del config para que los textos de abajo cuenten este array en vez
+ * de llevar el número y los nombres escritos a mano, que es como se
+ * desincronizan sin que nadie lo note.
+ *
+ * Los `id` son la clave que se guarda en la base (`inscripciones.categoria`):
+ * cambiarlos con gente ya inscrita la desvincularía de su categoría. Los
+ * `name` sí se pueden reescribir libremente.
+ *
+ * PENDIENTE: descripciones (edades y requisitos de cada una).
+ */
+const categories: Category[] = [
+  { id: "infantil", name: "Infantil" },
+  { id: "damas", name: "Damas" },
+  { id: "novatos", name: "Novatos" },
+  { id: "prejuvenil", name: "Prejuvenil" },
+  { id: "rigidas", name: "Rígidas" },
+  { id: "master", name: "Máster" },
+  { id: "enduro", name: "Enduro" },
+  { id: "juvenil", name: "Juvenil" },
+  { id: "elite", name: "Élite" },
+];
+
+/**
+ * "Nueve categorías, desde Infantil hasta Élite", derivado de la lista de
+ * arriba. Editar `categories` actualiza esta frase donde aparezca; antes
+ * había que acordarse de tocar tres textos a mano.
+ */
+const cuentaCategorias = contarFemenino(
+  categories.length,
+  "categoría",
+  "categorías",
+);
+
+const resumenCategorias = `${capitalizar(cuentaCategorias)}, desde ${
+  categories[0].name
+} hasta ${categories[categories.length - 1].name}`;
+
 const config: EventConfig = {
   slug: "downhill-la-cantera-2026",
   name: "Downhill Bella Vista 2026",
@@ -58,8 +100,7 @@ const config: EventConfig = {
 
   seo: {
     title: "Downhill Bella Vista 2026 — Carrera de MTB descenso en El Ángel",
-    description:
-      "Carrera de MTB descenso en El Ángel, Carchi: bajada única cronometrada hasta el sector del graderío de Bella Vista, con nueve categorías. Organiza Remnant EB — domingo 6 de septiembre de 2026.",
+    description: `Carrera de MTB descenso en El Ángel, Carchi: bajada única cronometrada hasta el sector del graderío de Bella Vista, con ${cuentaCategorias}. Organiza Remnant EB — domingo 6 de septiembre de 2026.`,
     keywords: [
       "downhill",
       "MTB",
@@ -129,20 +170,7 @@ const config: EventConfig = {
     radius: "sharp",
   },
 
-  // Las 9 categorías del evento, en el orden en que se corren. Los `id` son
-  // la clave que se guarda en la base: no cambiarlos una vez haya inscritos.
-  // PENDIENTE: descripciones (edades y requisitos de cada una).
-  categories: [
-    { id: "infantil", name: "Infantil" },
-    { id: "prejuvenil", name: "Prejuvenil" },
-    { id: "juvenil", name: "Juvenil" },
-    { id: "damas", name: "Damas" },
-    { id: "master", name: "Máster" },
-    { id: "rigidas", name: "Rígidas" },
-    { id: "enduro", name: "Enduro" },
-    { id: "elite", name: "Élite" },
-    { id: "proelite", name: "ProElite" },
-  ],
+  categories,
 
   sections: {
     hero: {
@@ -157,7 +185,7 @@ const config: EventConfig = {
     about: {
       paragraphs: [
         "Downhill Bella Vista 2026 es una carrera de descenso en El Ángel, Carchi. Una bajada de tierra rápida y técnica que termina en el sector del graderío, con saltos y obstáculos.",
-        "Cada corredor tiene una sola bajada cronometrada para dejarlo todo. Nueve categorías, desde Infantil hasta ProElite. Organiza Remnant EB.",
+        `Cada corredor tiene una sola bajada cronometrada para dejarlo todo. ${resumenCategorias}. Organiza Remnant EB.`,
       ],
       image: {
         src: aboutImage,
@@ -165,15 +193,14 @@ const config: EventConfig = {
       },
       highlights: [
         { label: "Bajada", value: "Única" },
-        { label: "Categorías", value: "9" },
+        { label: "Categorías", value: String(categories.length) },
         { label: "Provincia", value: "Carchi" },
         { label: "Disciplina", value: "DH" },
       ],
     },
 
     categoriesSection: {
-      intro:
-        "Nueve categorías, desde Infantil hasta ProElite. Toda categoría exige casco integral y guantes; se recomienda protección completa.",
+      intro: `${resumenCategorias}. Toda categoría exige casco integral y guantes; se recomienda protección completa.`,
     },
 
     route: {
