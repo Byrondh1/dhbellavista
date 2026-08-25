@@ -207,13 +207,12 @@ const config: EventConfig = {
     },
 
     route: {
-      // Mapa Leaflet sobre OpenStreetMap dibujando el track, coloreado por
-      // pendiente. El GPX manda: cambiar el archivo cambia el mapa.
+      // Mapa Leaflet sobre OpenStreetMap dibujando el track medido de la
+      // bajada, coloreado por pendiente. El GPX manda: cambiar el archivo
+      // —mismo nombre, misma carpeta— cambia el mapa sin tocar nada más.
       //
-      // PENDIENTE(Byron): el recorrido.gpx que hay ahora es un TRAZADO
-      // REFERENCIAL entre los dos extremos reales, no la bajada medida.
-      // Reemplázalo por el archivo del GPS —mismo nombre y misma carpeta— y
-      // el mapa se actualiza solo. Las cifras de `stats` sí son las reales.
+      // OJO: va en public/, que es lo único que Next sirve por HTTP. Un GPX
+      // en content/ no lo encuentra el navegador y el mapa sale vacío.
       mode: "gpx",
       gpxPath: "/events/downhill-la-cantera-2026/recorrido.gpx",
       allowGpxDownload: true,

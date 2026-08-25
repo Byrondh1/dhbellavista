@@ -96,10 +96,14 @@ export default function GpxMap({ gpxPath }: { gpxPath: string }) {
         )
           .addTo(map)
           .bindTooltip(
-            // La flecha dice el sentido: el color solo dice la dureza
+            // La flecha dice el sentido; el color solo dice la dureza. Y la
+            // altura va redondeada: un GPX de Strava la trae con decimales, y
+            // el rótulo salía como "3029.6900000000005 m".
             `${tramo.desnivel < 0 ? "▼" : "▲"} ${(
               Math.abs(tramo.pendiente) * 100
-            ).toFixed(0)} % · ${tramo.desde.ele ?? "?"} m`,
+            ).toFixed(0)} % · ${
+              tramo.desde.ele !== null ? Math.round(tramo.desde.ele) : "?"
+            } m`,
             { sticky: true },
           );
       }
@@ -169,10 +173,13 @@ function marcador(
     alt: etiqueta,
   })
     .addTo(map)
-    .bindTooltip(altura !== null ? `${etiqueta} · ${altura} m` : etiqueta, {
-      permanent: true,
-      direction: "top",
-      offset: [0, -10],
-      className: "recorrido-tooltip",
-    });
+    .bindTooltip(
+      altura !== null ? `${etiqueta} · ${Math.round(altura)} m` : etiqueta,
+      {
+        permanent: true,
+        direction: "top",
+        offset: [0, -10],
+        className: "recorrido-tooltip",
+      },
+    );
 }
