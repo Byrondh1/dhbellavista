@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="EB Corp" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>Downhill Bella Vista 2026 — bajada (TRAZADO REFERENCIAL, pendiente de reemplazar por el GPX medido)</name></metadata>
+  <trk>
+    <name>Salida Bella Vista → Meta graderío</name>
+    <trkseg>
+      <trkpt lat="0.614220" lon="-77.930390"><ele>3399</ele></trkpt>
+      <trkpt lat="0.614317" lon="-77.930443"><ele>3393</ele></trkpt>
+      <trkpt lat="0.614437" lon="-77.930469"><ele>3387</ele></trkpt>
+      <trkpt lat="0.614574" lon="-77.930472"><ele>3380</ele></trkpt>
+      <trkpt lat="0.614726" lon="-77.930457"><ele>3374</ele></trkpt>
+      <trkpt lat="0.614886" lon="-77.930431"><ele>3368</ele></trkpt>
+      <trkpt lat="0.615047" lon="-77.930405"><ele>3362</ele></trkpt>
+      <trkpt lat="0.615202" lon="-77.930386"><ele>3356</ele></trkpt>
+      <trkpt lat="0.615342" lon="-77.930386"><ele>3350</ele></trkpt>
+      <trkpt lat="0.615461" lon="-77.930412"><ele>3345</ele></trkpt>
+      <trkpt lat="0.615554" lon="-77.930471"><ele>3339</ele></trkpt>
+      <trkpt lat="0.615615" lon="-77.930569"><ele>3334</ele></trkpt>
+      <trkpt lat="0.615644" lon="-77.930709"><ele>3330</ele></trkpt>
+      <trkpt lat="0.615640" lon="-77.930890"><ele>3325</ele></trkpt>
+      <trkpt lat="0.615605" lon="-77.931111"><ele>3321</ele></trkpt>
+      <trkpt lat="0.615543" lon="-77.931364"><ele>3317</ele></trkpt>
+      <trkpt lat="0.615461" lon="-77.931642"><ele>3314</ele></trkpt>
+      <trkpt lat="0.615368" lon="-77.931936"><ele>3310</ele></trkpt>
+      <trkpt lat="0.615273" lon="-77.932231"><ele>3307</ele></trkpt>
+      <trkpt lat="0.615185" lon="-77.932517"><ele>3304</ele></trkpt>
+      <trkpt lat="0.615116" lon="-77.932780"><ele>3301</ele></trkpt>
+      <trkpt lat="0.615075" lon="-77.933008"><ele>3298</ele></trkpt>
+      <trkpt lat="0.615071" lon="-77.933189"><ele>3296</ele></trkpt>
+      <trkpt lat="0.615110" lon="-77.933316"><ele>3293</ele></trkpt>
+      <trkpt lat="0.615198" lon="-77.933380"><ele>3291</ele></trkpt>
+      <trkpt lat="0.615338" lon="-77.933381"><ele>3288</ele></trkpt>
+      <trkpt lat="0.615528" lon="-77.933318"><ele>3285</ele></trkpt>
+      <trkpt lat="0.615766" lon="-77.933194"><ele>3282</ele></trkpt>
+      <trkpt lat="0.616046" lon="-77.933018"><ele>3279</ele></trkpt>
+      <trkpt lat="0.616360" lon="-77.932799"><ele>3276</ele></trkpt>
+      <trkpt lat="0.616697" lon="-77.932551"><ele>3273</ele></trkpt>
+      <trkpt lat="0.617046" lon="-77.932287"><ele>3269</ele></trkpt>
+      <trkpt lat="0.617395" lon="-77.932024"><ele>3265</ele></trkpt>
+      <trkpt lat="0.617731" lon="-77.931778"><ele>3261</ele></trkpt>
+      <trkpt lat="0.618040" lon="-77.931564"><ele>3257</ele></trkpt>
+      <trkpt lat="0.618313" lon="-77.931396"><ele>3252</ele></trkpt>
+      <trkpt lat="0.618540" lon="-77.931287"><ele>3247</ele></trkpt>
+      <trkpt lat="0.618714" lon="-77.931245"><ele>3241</ele></trkpt>
+      <trkpt lat="0.618829" lon="-77.931275"><ele>3235</ele></trkpt>
+      <trkpt lat="0.618886" lon="-77.931380"><ele>3229</ele></trkpt>
+      <trkpt lat="0.618884" lon="-77.931558"><ele>3223</ele></trkpt>
+      <trkpt lat="0.618830" lon="-77.931802"><ele>3216</ele></trkpt>
+      <trkpt lat="0.618729" lon="-77.932105"><ele>3209</ele></trkpt>
+      <trkpt lat="0.618591" lon="-77.932454"><ele>3201</ele></trkpt>
+      <trkpt lat="0.618428" lon="-77.932835"><ele>3194</ele></trkpt>
+      <trkpt lat="0.618251" lon="-77.933234"><ele>3186</ele></trkpt>
+      <trkpt lat="0.618074" lon="-77.933633"><ele>3178</ele></trkpt>
+      <trkpt lat="0.617908" lon="-77.934017"><ele>3170</ele></trkpt>
+      <trkpt lat="0.617767" lon="-77.934371"><ele>3161</ele></trkpt>
+      <trkpt lat="0.617659" lon="-77.934682"><ele>3153</ele></trkpt>
+      <trkpt lat="0.617593" lon="-77.934941"><ele>3145</ele></trkpt>
+      <trkpt lat="0.617575" lon="-77.935139"><ele>3137</ele></trkpt>
+      <trkpt lat="0.617608" lon="-77.935274"><ele>3128</ele></trkpt>
+      <trkpt lat="0.617692" lon="-77.935344"><ele>3120</ele></trkpt>
+      <trkpt lat="0.617824" lon="-77.935354"><ele>3112</ele></trkpt>
+      <trkpt lat="0.618001" lon="-77.935307"><ele>3104</ele></trkpt>
+      <trkpt lat="0.618214" lon="-77.935215"><ele>3097</ele></trkpt>
+      <trkpt lat="0.618455" lon="-77.935087"><ele>3090</ele></trkpt>
+      <trkpt lat="0.618715" lon="-77.934937"><ele>3083</ele></trkpt>
+      <trkpt lat="0.618982" lon="-77.934776"><ele>3076</ele></trkpt>
+      <trkpt lat="0.619248" lon="-77.934618"><ele>3070</ele></trkpt>
+      <trkpt lat="0.619501" lon="-77.934475"><ele>3064</ele></trkpt>
+      <trkpt lat="0.619735" lon="-77.934357"><ele>3059</ele></trkpt>
+      <trkpt lat="0.619942" lon="-77.934272"><ele>3054</ele></trkpt>
+      <trkpt lat="0.620119" lon="-77.934226"><ele>3049</ele></trkpt>
+      <trkpt lat="0.620262" lon="-77.934221"><ele>3045</ele></trkpt>
+      <trkpt lat="0.620373" lon="-77.934258"><ele>3042</ele></trkpt>
+      <trkpt lat="0.620452" lon="-77.934334"><ele>3038</ele></trkpt>
+      <trkpt lat="0.620505" lon="-77.934444"><ele>3036</ele></trkpt>
+      <trkpt lat="0.620537" lon="-77.934580"><ele>3034</ele></trkpt>
+      <trkpt lat="0.620555" lon="-77.934733"><ele>3032</ele></trkpt>
+      <trkpt lat="0.620566" lon="-77.934895"><ele>3031</ele></trkpt>
+      <trkpt lat="0.620578" lon="-77.935055"><ele>3030</ele></trkpt>
+      <trkpt lat="0.620598" lon="-77.935206"><ele>3030</ele></trkpt>
+      <trkpt lat="0.620632" lon="-77.935339"><ele>3030</ele></trkpt>
+      <trkpt lat="0.620685" lon="-77.935448"><ele>3030</ele></trkpt>
+      <trkpt lat="0.620760" lon="-77.935530"><ele>3030</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

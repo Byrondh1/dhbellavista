@@ -94,10 +94,28 @@ export interface RouteSection {
     elevationGainM?: number;
     maxAltitudeM?: number;
     difficulty?: string;
+    /** Metros que se pierden en la bajada, para eventos de descenso */
+    dropM?: number;
+    /** Altitud del punto de salida */
+    startAltitudeM?: number;
+    /** Altitud de la meta */
+    finishAltitudeM?: number;
   };
+  /**
+   * Punto de salida, para el botón "cómo llegar". Va aparte de
+   * `location.coordinates` porque esas son las del pueblo o del recinto: a la
+   * partida de una bajada se llega por otro lado.
+   */
+  startPoint?: { lat: number; lng: number };
   description: string;
   /** Muestra botón de descarga del GPX (requiere gpxPath) */
   allowGpxDownload?: boolean;
+  /**
+   * Nombre con el que se le descarga el GPX al corredor. El archivo en el
+   * repo sigue la convención `recorrido.gpx`; esto es lo que él ve al
+   * guardarlo, y lo que le va a aparecer en el GPS o el reloj.
+   */
+  gpxFileName?: string;
   /** Fotos o perfil de la pista */
   images?: ImageAsset[];
 }

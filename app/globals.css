@@ -128,3 +128,28 @@ html[data-js] .reveal.is-visible {
     transition: none;
   }
 }
+
+/*
+ * El mapa del recorrido, integrado en el fondo oscuro.
+ *
+ * Los tiles de OpenStreetMap son claros y sobre esta landing quedaban como un
+ * recorte pegado encima. Se atenúan un punto — solo visualmente, con un
+ * filtro CSS: el tile que se descarga y se cachea es el original, y la
+ * atribución sigue intacta. El filtro va SOLO al panel de tiles, para que el
+ * trazado de colores y los marcadores conserven su intensidad.
+ */
+.leaflet-container .leaflet-tile-pane {
+  filter: brightness(0.88) contrast(1.06) saturate(0.85);
+}
+
+/* Los rótulos de Salida y Meta, en la tipografía del sitio */
+.leaflet-tooltip.recorrido-tooltip {
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  box-shadow: none;
+  font-weight: 600;
+}
+.leaflet-tooltip.recorrido-tooltip::before {
+  border-top-color: var(--c-border);
+}
