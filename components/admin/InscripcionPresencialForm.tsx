@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatoValido, sugerirCorreo } from "@/lib/email-typos";
@@ -79,6 +79,18 @@ export function InscripcionPresencialForm({
   const [error, setError] = useState<string | null>(null);
   const [resultado, setResultado] = useState<Resultado | null>(null);
 
+  /**
+   * Cerrojo contra el doble envío.
+   *
+   * `disabled={busy}` NO alcanza: es un guard de render, y solo existe cuando
+   * React ha vuelto a pintar. Dos toques seguidos de un dedo nervioso llegan
+   * antes de ese repintado y entran los dos. Comprobado: tres clics en el
+   * mismo tick producían tres inscripciones, con tres dorsales distintos y
+   * tres correos. Una ref se pone a true en el mismo instante del primer
+   * clic, así que el segundo se topa con ella pase lo que pase.
+   */
+  const enviando = useRef(false);
+
   const set = (campo: keyof typeof VACIO) => (valor: string) =>
     setValores((v) => ({ ...v, [campo]: valor }));
 
@@ -108,6 +120,11 @@ export function InscripcionPresencialForm({
   }
 
   async function registrar() {
+    // Lo primero de todo y de forma síncrona: aquí no puede haber ni un await
+    // por delante, o se abre otra vez la ventana para el segundo clic.
+    if (enviando.current) return;
+    enviando.current = true;
+
     setBusy(true);
     setError(null);
     try {
@@ -139,6 +156,10 @@ export function InscripcionPresencialForm({
       setError("Sin conexión. Revisa la señal e intenta de nuevo.");
       setPaso("datos");
     } finally {
+      // Se suelta el cerrojo siempre: si el alta falló hay que poder
+      // reintentar. Los toques duplicados del primer envío ya se descartaron
+      // hace rato —eran síncronos—, así que soltarlo aquí no los revive.
+      enviando.current = false;
       setBusy(false);
     }
   }
@@ -148,6 +169,7 @@ export function InscripcionPresencialForm({
     setConsentimiento(false);
     setCobrado(false);
     setResultado(null);
+    enviando.current = false;
     setError(null);
     setPaso("datos");
   }
@@ -176,7 +198,10 @@ export function InscripcionPresencialForm({
           </p>
         </div>
 
-        <dl className="grid gap-3 sm:grid-cols-2">
+        {/* Dos columnas ya en el móvil: en una sola, estas tarjetas empujaban
+            el checkbox y el botón por debajo del borde de la pantalla, y el
+            operador tocaba sin ver que algo cambiaba más abajo. */}
+        <dl className="grid grid-cols-2 gap-3">
           <Dato label="Nombre" valor={valores.nombre} />
           <Dato label="Teléfono" valor={valores.telefono} />
           {campos.categoria && (
@@ -191,24 +216,19 @@ export function InscripcionPresencialForm({
           {campos.placa && <Dato label={placaLabel} valor={valores.placa} />}
         </dl>
 
-        <label className="flex items-start gap-3 rounded-brand border border-warning bg-surface p-4">
-          <input
-            type="checkbox"
-            checked={cobrado}
-            onChange={(e) => setCobrado(e.target.checked)}
-            className="mt-1 h-5 w-5 shrink-0"
-          />
-          <span className="text-sm">
-            <span className="font-semibold uppercase">
-              Recibí el pago en efectivo
-              {monto ? ` (${monto})` : ""}
-            </span>
-            <span className="mt-1 block text-muted">
-              La inscripción queda confirmada y cobrada. En la acreditación no
-              volverá a aparecer como pendiente de pago.
-            </span>
-          </span>
-        </label>
+        <p className="text-sm text-muted">
+          Al confirmar, la inscripción queda cobrada: en la acreditación no
+          volverá a aparecer como pendiente de pago.
+        </p>
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => setPaso("datos")}
+          className="rounded-brand border-2 border-border px-6 py-3 text-base font-semibold uppercase tracking-wide text-muted disabled:opacity-50"
+        >
+          Corregir datos
+        </button>
 
         {error && (
           <p role="alert" className="text-sm font-medium text-warning">
@@ -216,23 +236,63 @@ export function InscripcionPresencialForm({
           </p>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        {/* Barra de acción anclada al pie en el móvil.
+            El botón vivía al final de una pantalla que no cabía: medido en un
+            390×844, quedaba en y=1018 con la ventana en 844. El operador
+            tocaba el checkbox, no veía cambiar nada —porque el cambio estaba
+            fuera de vista— y volvía a tocar. Anclada, la acción y su estado
+            están siempre delante, mida lo que mida el teléfono. */}
+        {/* Las DOS cosas que hay que tocar, juntas y ancladas al pie.
+            Antes el checkbox y el botón vivían al final de una pantalla que no
+            cabía: medido en un 390×844, el botón quedaba en y=1018 con la
+            ventana en 844. Se tocaba el checkbox, no se veía cambiar nada
+            —porque el cambio estaba fuera de vista— y se volvía a tocar.
+            Ancladas juntas, la acción y su estado están siempre delante. */}
+        <div className="sticky bottom-0 z-10 -mx-4 space-y-3 border-t border-border bg-background px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
+          {/* Toda la franja es el objetivo del dedo, y CAMBIA de aspecto al
+              marcarse. Antes el único indicio era el tic nativo de 20 px sobre
+              fondo oscuro: no se notaba. */}
+          <label
+            className={`flex items-center gap-3 rounded-brand border-2 p-3 transition-colors ${
+              cobrado ? "border-primary bg-primary/10" : "border-warning bg-surface"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={cobrado}
+              onChange={(e) => setCobrado(e.target.checked)}
+              className="h-7 w-7 shrink-0 accent-[var(--c-primary)]"
+            />
+            <span className="text-sm font-semibold uppercase">
+              Recibí el pago en efectivo{monto ? ` (${monto})` : ""}
+            </span>
+          </label>
+
+          {/* Un botón apagado sin explicación se lee como un botón roto. */}
+          {!cobrado && !busy && (
+            <p
+              id="motivo-deshabilitado"
+              className="text-sm font-medium text-warning"
+            >
+              Marca que recibiste el pago para continuar.
+            </p>
+          )}
+
           <button
             type="button"
             disabled={busy || !cobrado}
             onClick={registrar}
-            className="rounded-brand bg-primary px-6 py-4 text-base font-bold uppercase tracking-wide text-primary-contrast disabled:opacity-50"
+            aria-describedby={!cobrado ? "motivo-deshabilitado" : undefined}
+            className="w-full rounded-brand bg-primary px-6 py-4 text-base font-bold uppercase tracking-wide text-primary-contrast disabled:opacity-50"
           >
-            {busy ? "Registrando…" : `Confirmar y asignar ${identLabel}`}
+            {busy ? "Procesando…" : `Confirmar y asignar ${identLabel}`}
           </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => setPaso("datos")}
-            className="rounded-brand border-2 border-border px-6 py-4 text-base font-semibold uppercase tracking-wide text-muted disabled:opacity-50"
-          >
-            Corregir datos
-          </button>
+
+          {busy && (
+            <p role="status" className="text-sm text-muted">
+              Registrando y enviando el correo. No vuelvas a tocar el botón.
+            </p>
+          )}
         </div>
       </section>
     );
