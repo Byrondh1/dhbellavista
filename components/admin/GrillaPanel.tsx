@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /**
@@ -63,6 +63,37 @@ export function GrillaPanel({
   const avisar = (clave: string, aviso: Aviso) =>
     setAvisos((a) => ({ ...a, [clave]: aviso }));
 
+  /**
+   * Cerrojo contra el doble disparo, el mismo del mostrador presencial.
+   *
+   * `disabled={busy !== null}` es un guard de RENDER: solo existe cuando React
+   * ha vuelto a pintar, y los clics que llegan antes de ese commit entran
+   * todos. Aquí duele especialmente en "enviar": un doble clic mandaría la
+   * grilla dos veces a los cien corredores, con el tope diario de Resend de
+   * por medio.
+   *
+   * Se cierra de forma síncrona y ANTES del window.confirm. Mientras el
+   * diálogo está abierto el navegador encola los clics y los suelta al
+   * aceptarlo: sin el cerrojo puesto antes, cada clic encolado abriría su
+   * propio diálogo y dispararía su propia acción.
+   *
+   * Uno solo para las cuatro acciones, igual que `busy` es uno solo: en este
+   * panel nunca hay dos cosas en marcha a la vez.
+   */
+  const enCurso = useRef(false);
+
+  /** Toma el cerrojo, o devuelve false si ya hay una acción en marcha */
+  function tomarCerrojo(): boolean {
+    if (enCurso.current) return false;
+    enCurso.current = true;
+    return true;
+  }
+
+  function soltarCerrojo() {
+    enCurso.current = false;
+    setBusy(null);
+  }
+
   async function llamar(cuerpo: Record<string, unknown>) {
     const res = await fetch("/api/admin/grilla", {
       method: "POST",
@@ -83,6 +114,7 @@ export function GrillaPanel({
   }
 
   async function guardarOrden() {
+    if (!tomarCerrojo()) return;
     setBusy("orden");
     avisar("orden", null);
     try {
@@ -105,11 +137,16 @@ export function GrillaPanel({
     } catch {
       avisar("orden", { tipo: "error", texto: "Sin conexión." });
     } finally {
-      setBusy(null);
+      soltarCerrojo();
     }
   }
 
   async function sortear() {
+    // El cerrojo primero: los clics que llegan mientras el diálogo está
+    // abierto se sueltan al aceptarlo, y sin esto cada uno abriría su propio
+    // diálogo y lanzaría su propio sorteo.
+    if (!tomarCerrojo()) return;
+
     // El diálogo con las palabras exactas de la advertencia. El servidor lo
     // exige igual: esto es la cortesía, no la salvaguarda.
     if (
@@ -118,6 +155,7 @@ export function GrillaPanel({
         "Esto va a re-sortear a TODOS los corredores, se perderá el orden actual. ¿Continuar?",
       )
     ) {
+      soltarCerrojo();
       return;
     }
     setBusy("sortear");
@@ -142,11 +180,12 @@ export function GrillaPanel({
     } catch {
       avisar("sortear", { tipo: "error", texto: "Sin conexión." });
     } finally {
-      setBusy(null);
+      soltarCerrojo();
     }
   }
 
   async function calcularHoras() {
+    if (!tomarCerrojo()) return;
     setBusy("horas");
     avisar("horas", null);
     try {
@@ -167,7 +206,7 @@ export function GrillaPanel({
     } catch {
       avisar("horas", { tipo: "error", texto: "Sin conexión." });
     } finally {
-      setBusy(null);
+      soltarCerrojo();
     }
   }
 
@@ -177,12 +216,17 @@ export function GrillaPanel({
    * volver a escribirle a quien ya recibió el suyo.
    */
   async function enviar(soloFaltantes: boolean) {
+    // Igual que en el sorteo, y aquí es lo más importante del archivo: un
+    // segundo clic aceptado mandaría la grilla otra vez a todos.
+    if (!tomarCerrojo()) return;
+
     const pendientes = soloFaltantes ? conHora - yaRecibieron : conHora;
     if (
       !window.confirm(
         `Se va a enviar la grilla a ${pendientes} corredores, a su correo registrado. ¿Continuar?`,
       )
     ) {
+      soltarCerrojo();
       return;
     }
     setBusy("enviar");
@@ -230,7 +274,7 @@ export function GrillaPanel({
         texto: `Sin conexión. Enviados hasta ahora: ${enviados}. Puedes reanudar con "Enviar a los que faltan".`,
       });
     } finally {
-      setBusy(null);
+      soltarCerrojo();
     }
   }
 
@@ -315,6 +359,7 @@ export function GrillaPanel({
           onClick={sortear}
           disabled={busy !== null || totalVerificados === 0}
           cargando={busy === "sortear"}
+          textoCargando="Sorteando…"
           variante={sorteadaAt ? "peligro" : "principal"}
         >
           {sorteadaAt ? "Re-sortear la grilla" : "Generar grilla de salida"}
@@ -361,6 +406,7 @@ export function GrillaPanel({
           onClick={calcularHoras}
           disabled={busy !== null || conTurno === 0}
           cargando={busy === "horas"}
+          textoCargando="Calculando…"
         >
           {horasCalculadasAt ? "Recalcular horas" : "Calcular horas"}
         </Boton>
@@ -451,6 +497,7 @@ export function GrillaPanel({
                 onClick={() => enviar(true)}
                 disabled={busy !== null || faltanPorRecibir === 0}
                 cargando={busy === "enviar"}
+                textoCargando="Enviando…"
               >
                 {yaRecibieron > 0
                   ? `Enviar a los que faltan (${faltanPorRecibir})`
@@ -460,6 +507,8 @@ export function GrillaPanel({
                 <Boton
                   onClick={() => enviar(false)}
                   disabled={busy !== null}
+                  cargando={busy === "enviar"}
+                  textoCargando="Enviando…"
                   variante="secundario"
                 >
                   Reenviar a todos ({conHora})
@@ -501,12 +550,16 @@ function Boton({
   onClick,
   disabled,
   cargando,
+  /** Qué dice mientras trabaja. Cada acción tarda distinto y conviene que
+      el botón diga cuál es la que está corriendo. */
+  textoCargando = "Trabajando…",
   variante = "principal",
   children,
 }: {
   onClick: () => void;
   disabled?: boolean;
   cargando?: boolean;
+  textoCargando?: string;
   variante?: "principal" | "secundario" | "peligro";
   children: React.ReactNode;
 }) {
@@ -522,7 +575,7 @@ function Boton({
       disabled={disabled || cargando}
       className={`rounded-brand px-6 py-3 text-base font-semibold uppercase tracking-wide disabled:opacity-50 ${estilos}`}
     >
-      {cargando ? "Trabajando…" : children}
+      {cargando ? textoCargando : children}
     </button>
   );
 }
