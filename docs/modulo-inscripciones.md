@@ -297,6 +297,49 @@ nada. La página avisa cuántos números quedan antes de empezar a tomar datos.
 Esta pantalla **no consulta el candado de inscripciones**: existe justamente
 para cuando las inscripciones online ya están cerradas.
 
+## Grilla de salida (solo downhill)
+
+Se activa con `registrationForm.grillaSalida: true` en el config. Sin ese
+flag las pantallas no existen: en la rodada `/grilla`, `/admin/grilla` y el
+endpoint devuelven 404, y el enlace no aparece en el panel.
+
+**`/admin/grilla`** tiene cuatro pasos, deliberadamente separados:
+
+1. **Orden de las categorías.** Vive en la tabla `evento_categorias`, no en el
+   config, para poder mover una categoría de sitio sin redesplegar. Mientras
+   no se guarde nada, manda el orden del array `categories` del config.
+2. **Sortear el orden de salida.** Reparte al azar el turno dentro de cada
+   categoría entre los **verificados** (incluidos los que pagan en efectivo el
+   día del evento: tienen dorsal y van a correr). El turno **no tiene nada que
+   ver con el dorsal**. Lo hace la RPC `sortear_grilla` en una sola
+   transacción. Si ya se sorteó antes, pide una confirmación explícita — y el
+   servidor la exige además del diálogo, porque un re-sorteo tira el orden que
+   ya se comunicó.
+3. **Calcular las horas.** Hora de inicio + intervalo (1 min por defecto).
+   Entre el último de una categoría y el primero de la siguiente se deja **un
+   intervalo libre extra**: con inicio 12:00 e intervalo 1, tres corredores de
+   Infantil salen 12:00, 12:01 y 12:02, el 12:03 queda vacío y la primera Dama
+   sale 12:04. Es aritmética sobre el orden ya fijado (`lib/grilla.ts`), así
+   que **recalcular no re-sortea**: cambiar la hora de inicio la noche anterior
+   es seguro. Cada corredor tiene su minuto fijo; una ausencia deja ese minuto
+   vacío y no mueve a nadie.
+4. **Enviar la grilla.** No se dispara solo nunca. Antes de mandar muestra a
+   cuántos va y una **vista previa del correo real** (con los datos del primero
+   de la grilla). El envío va **por lotes de 10**, espaciados medio segundo
+   para no chocar con el límite de Resend, y cada correo se marca en
+   `correo_grilla_at` **en cuanto sale**: un corte a media lista se reanuda con
+   "Enviar a los que faltan" sin escribirle dos veces a nadie.
+
+**`/grilla`** es la página pública y la fuente de verdad: siempre refleja el
+estado actual, así que una corrección posterior al envío no obliga a reenviar
+nada — el correo lo dice con esas palabras. La sirve el servidor con el
+service role publicando **solo nombre, dorsal y hora** (`COLUMNAS_GRILLA`);
+las cédulas, correos y teléfonos de la tabla no salen de ahí.
+
+Ojo con el volumen: el tope del plan gratuito de Resend son 100 correos/día,
+y con cupo de 100 dorsales un envío masivo consume la cuota entera. Conviene
+mandar la grilla un día en que no se esperen muchas confirmaciones.
+
 ## Check-in y control de asistencia (día del evento)
 
 **Vista de acreditación: `/admin/asistencia`** (botón "Control de asistencia"
